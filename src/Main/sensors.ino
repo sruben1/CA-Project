@@ -4,7 +4,7 @@
 /**
 *  Store/Log sensor Data to SD-Card
 */
-void storeBME280Data(Stream* serial) {
+void storeBME280Data(SimpleLogger& logger) {
   float temp(NAN), hum(NAN), pres(NAN);
 
   BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
@@ -13,17 +13,8 @@ void storeBME280Data(Stream* serial) {
   bme.read(pres, temp, hum, tempUnit, presUnit);
 
   //For Debugging:
-  serial->print("Temp: ");
-  serial->print(temp);
-  serial->print("°" + String(tempUnit == BME280::TempUnit_Celsius ? 'C' : 'F'));
-  serial->print("\t\tHumidity: ");
-  serial->print(hum);
-  serial->print("% RH");
-  serial->print("\t\tPressure: ");
-  serial->print(pres);
-  serial->println("Pa");
-
-  delay(1000);  //TODO: can remove?
-
+  char buffer[128];
+  sprintf(buffer, "\nTemp (°C): %.2f \nHumidity (RH): %.2f \nPressure (Pa): %.2f", temp, hum, pres);
+  logger.d(buffer);
   //TODO : Write Data to SD-Card
 }

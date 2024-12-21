@@ -2,13 +2,14 @@
 #define SOILWATERING_H
 
 #include <Arduino.h>
+#include <SimpleLogger.h>
 
 class SoilWatering {
 private:
   // General variables
   int soilNodesRngStart;
   int needsWateringBelow;
-  Stream* serial;
+  SimpleLogger* logger = nullptr;
 
   // Main watering logic variables
   int currentSoilHumidityAvrg[9] = { 0 };
@@ -16,7 +17,7 @@ private:
   const int checkNeedsWateringEvery = 5;
   bool isCurrentlyWatering = false;
 
-  // Queue variables
+  // Watering queue variables
   uint8_t buffer[9] = { 0 };
   uint8_t head = 0;
   uint8_t count = 0;
@@ -30,7 +31,7 @@ public:
   explicit SoilWatering();
 
   // Public methods
-  void begin(int soilNodesRngStart, int needsWateringBelow, Stream* serial);
+  void begin(int soilNodesRngStart, int needsWateringBelow, SimpleLogger& logger);
   void collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();

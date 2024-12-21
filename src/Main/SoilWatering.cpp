@@ -1,21 +1,22 @@
 #include "SoilWatering.h"
 
-// Constructor definition
 SoilWatering::SoilWatering() {
-  // Initialize values if needed
+  // empty constructor
 }
 
-// Initialize soil monitoring settings
-void SoilWatering::begin(int soilNodesRngStart, int needsWateringBelow, Stream* serial) {
+// Sets the constants to be used from  
+void SoilWatering::begin(int soilNodesRngStart, int needsWateringBelow, SimpleLogger& logger) {
   this->soilNodesRngStart = soilNodesRngStart;
   this->needsWateringBelow = needsWateringBelow;
-  this->serial = serial;
+  this->logger = &logger; 
 }
 
 // Add a value to the queue
 void SoilWatering::queueAdd(uint8_t value) {
   if (value > 9) {
-    serial->println("ERROR: Watering cell value must be between 0 and 9, but was " + String((int)value));
+    char buffer[64];
+    sprintf(buffer, "ERROR: Watering cell value must be between 0 and 9, but was %u", value);
+    logger->w(buffer);
     return;
   }
 
