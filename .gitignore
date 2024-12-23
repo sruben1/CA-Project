@@ -1,4 +1,3 @@
-/docs/main-schematic/*
-
-!docs/main-schematic/main-schematic.kicad_sch
-!docs/main-schematic/Arduino_Mega_Project_Library.kicad_sym
+/docs/main-schematic/main-schematic-backups/*
+/docs/main-schematic/Arduino_Mega_Project_Library.bak
+/docs/main-schematic/fp-info-cache
