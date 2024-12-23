@@ -1,0 +1,4 @@
+/docs/main-schematic/*
+
+!docs/main-schematic/main-schematic.kicad_sch
+!docs/main-schematic/Arduino_Mega_Project_Library.kicad_sym
