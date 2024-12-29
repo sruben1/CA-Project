@@ -22,22 +22,19 @@ unsigned long previousMillis = 0;  // will store last time main loop iterrated
 //===========
 
 // Define Pins used for LCD Display
-LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+LiquidCrystal lcd(4, 5, 14, 15, 16, 17);
 String line1;  //For more efficient way to handle prints.
 String line2;
 
 // Menu navigation buttons
-#define NULL_BUTTON_VALUE 0 // Null value
+#define NULL_BUTTON_VALUE 0  // Null value
 #define BTN_DOWN 18
 #define BTN_UP 19
-#define BTN_ENTER 20
+#define BTN_ENTER 2
 volatile uint8_t nextMenuBtnToHandle = NULL;  // for interrupt logic, TODO
-// => Range of these buttons:
-#define BTN_RNG_START 18
-#define BTN_RNG_END 20
 
 // Special Button:
-#define EMERGENCY_STOP_BUTTON 21
+#define EMERGENCY_STOP_BUTTON 3
 
 // Main menu page selctor:
 bool notInSubMenu = true;
@@ -61,9 +58,8 @@ const char* subPageStandardValueNames[MENU_PAGE_COUNT][7] = { { "Yes", "No", "Ca
 // TODO
 
 // Soil Humidity sensors:
-class SoilWatering;             // Declare here for compiler
 SoilWatering soilWatering;      // Declare general instance to use.
-#define soilNodesRngStart 1     // TODO!! : Make sure these are correct!
+#define soilNodesRngStart 0     // TODO!! : Make sure these are correct!
 #define needsWateringBelow 511  // TODO : test needed value + do we want individual setting section?
 
 // Temp/Humid/Pressure sensor:
@@ -101,8 +97,6 @@ void setup() {
       logger.c("Found UNKNOWN sensor! Error!");
   }
 
-  bme.begin();
-
   // UI Menu:
   //=========
   // LCD:
@@ -130,8 +124,8 @@ void loop() {
   //==========
   // Menu Buttons
 
-  //No interrupt safety needed, since atomic operations (and overwriting value to null even if interrupt occures inbetween ok, since the other input not yet handled): 
-  uint8_t btnCurrentlyHandled = nextMenuBtnToHandle; 
+  //No interrupt safety needed, since atomic operations (and overwriting value to null even if interrupt occures inbetween ok, since the other input not yet handled):
+  uint8_t btnCurrentlyHandled = nextMenuBtnToHandle;
   nextMenuBtnToHandle = NULL_BUTTON_VALUE;
 
   if (btnCurrentlyHandled != NULL_BUTTON_VALUE) {
@@ -173,15 +167,13 @@ void loop() {
 
   // SensorHandling:
   //================
-
-  // TODO!!!: implement correct timing of:
-  soilWatering.collectSoilHumidityValues();
-  // and
-  soilWatering.toggleWatering();
-
-
+  // TODO!: verify timing in regards to logic and program flow:
   if (currentMillis - previousMillis >= SENSOR_READ_INTERVAL) {
-    previousMillis = currentMillis;  // saves current value, so that the time you ran this section can be checked
-    storeBME280Data(&logger);        //TODO: Add data Logger; to get started: https://github.com/arduino-libraries/SD/blob/master/examples/Datalogger/Datalogger.ino
+    previousMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
+    soilWatering.collectSoilHumidityValues();
+    soilWatering.toggleWatering();
+
+    //TODO: replace with log method in SD-Card Class:  
+    storeBME280Data(&logger);  //TODO: Add data Logger; to get started: https://github.com/arduino-libraries/SD/blob/master/examples/Datalogger/Datalogger.ino
   }
 }
