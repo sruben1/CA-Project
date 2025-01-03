@@ -32,7 +32,7 @@ public:
 
   // Public methods
   void begin(int soilNodesRngStart, int needsWateringBelow, SimpleLogger& logger);
-  void collectSoilHumidityValues();
+  uint8_t* collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();
 };

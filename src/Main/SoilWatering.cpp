@@ -38,15 +38,18 @@ uint8_t SoilWatering::queuGetNext() {
   return value;
 }
 
-// Collect and update soil humidity values
-void SoilWatering::collectSoilHumidityValues() {
+/** 
+*  Collect and update soil humidity values and return an array of length 9.
+*/
+uint8_t* SoilWatering::collectSoilHumidityValues() {
+  static uint8_t returnValues[9] = {0};
   if (currentAvrgIteration == 0) {
     for (int i = 0; i < 9; i++) {
-      currentSoilHumidityAvrg[i] = analogRead(soilNodesRngStart + i);
+      returnValues[i], currentSoilHumidityAvrg[i] = analogRead(soilNodesRngStart + i);
     }
   } else {
     for (int i = 0; i < 9; i++) {
-      currentSoilHumidityAvrg[i] = (currentSoilHumidityAvrg[i] + analogRead(soilNodesRngStart + i)) / 2;
+      returnValues[i], currentSoilHumidityAvrg[i] = (currentSoilHumidityAvrg[i] + analogRead(soilNodesRngStart + i)) / 2;
     }
     if (currentAvrgIteration == checkNeedsWateringEvery - 1) {
       for (int i = 0; i < 9; i++) {
