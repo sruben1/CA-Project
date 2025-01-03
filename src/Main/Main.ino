@@ -5,6 +5,7 @@
 #include <SD.h>            // https://github.com/arduino-libraries/SD
 #include <SimpleLogger.h>  // for debugging, https://github.com/DouglasFlores-fun/SimpleLogger
 #include "SoilWatering.h"  // Custom library made by us, to have a cleaner code structure.
+#include <sdCard.ino>
 
 #define SERIAL_BAUD 115200  // Rate used for serial communication
 
@@ -56,8 +57,6 @@ const char* subPageStandardValueNames[MENU_PAGE_COUNT][7] = { { "Yes", "No", "Ca
 
 // SD-Card-Logger:
 //default pin on mega are: 50,51,52 and 53 is the SS pin
-File dataFile;
-File preferencesFile;
 
 // Soil Humidity sensors:
 SoilWatering soilWatering;      // Declare general instance to use.
@@ -124,6 +123,8 @@ void setup() {
   } else {
     logger.d("SD Card succesfully initialised")
   }
+  //try to read preferences from SD Card
+  sdCard.readPreferences(&logger);
 }
 
 void loop() {
@@ -179,21 +180,13 @@ void loop() {
   // TODO!: verify timing in regards to logic and program flow:
   if (currentMillis - previousMillis >= SENSOR_READ_INTERVAL) {
     previousMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
-    soilWatering.collectSoilHumidityValues();
-    //TODO: get Values
-    int humidityData; //TODO: get Values
-    // Open the datafile on the SD Card to write all the data into it.
-    dataFile = SD.open("data.txt", FILE_WRITE);
-    if(dataFile){
-      //Print the values to the file
-      SD.print(humidityData);
-      soilWatering.toggleWatering();
 
-      //TODO: replace with log method in SD-Card Class:  
-      storeBME280Data(&logger);  //TODO: Add data Logger; to get started: https://github.com/arduino-libraries/SD/blob/master/examples/Datalogger/Datalogger.ino
-    } else {
-      logger.c("ERROR: Could not open data-file, is SD card unplugged?")
-    }
+    //get values
+    uint8_t* humidityData = soilWatering.collectSoilHumidityValues();
+    float* bme280Data = storeBME280Data(&logger);
+
+    //store everything on SD-Card
+    sdCard.storeData(humidityData,bme280Data,&logger);
 
     //Check if plants need watering
     soilWatering.toggleWatering();
