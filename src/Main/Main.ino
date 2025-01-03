@@ -55,7 +55,9 @@ const char* subPageStandardValueNames[MENU_PAGE_COUNT][7] = { { "Yes", "No", "Ca
 #define SENSOR_READ_INTERVAL 30000  // long value in millis
 
 // SD-Card-Logger:
-// TODO
+//default pin on mega are: 50,51,52 and 53 is the SS pin
+File dataFile;
+File preferencesFile;
 
 // Soil Humidity sensors:
 SoilWatering soilWatering;      // Declare general instance to use.
@@ -115,6 +117,13 @@ void setup() {
   // Emrgencey stop:
   pinMode(EMERGENCY_STOP_BUTTON, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(EMERGENCY_STOP_BUTTON), emergencyStop, RISING);
+
+  //SD Card setup
+  if (!SD.begin()) {
+    logger.c("SD initialization failed");
+  } else {
+    logger.d("SD Card succesfully initialised")
+  }
 }
 
 void loop() {
@@ -171,9 +180,22 @@ void loop() {
   if (currentMillis - previousMillis >= SENSOR_READ_INTERVAL) {
     previousMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
     soilWatering.collectSoilHumidityValues();
-    soilWatering.toggleWatering();
+    //TODO: get Values
+    int humidityData; //TODO: get Values
+    // Open the datafile on the SD Card to write all the data into it.
+    dataFile = SD.open("data.txt", FILE_WRITE);
+    if(dataFile){
+      //Print the values to the file
+      SD.print(humidityData);
+      soilWatering.toggleWatering();
 
-    //TODO: replace with log method in SD-Card Class:  
-    storeBME280Data(&logger);  //TODO: Add data Logger; to get started: https://github.com/arduino-libraries/SD/blob/master/examples/Datalogger/Datalogger.ino
+      //TODO: replace with log method in SD-Card Class:  
+      storeBME280Data(&logger);  //TODO: Add data Logger; to get started: https://github.com/arduino-libraries/SD/blob/master/examples/Datalogger/Datalogger.ino
+    } else {
+      logger.c("ERROR: Could not open data-file, is SD card unplugged?")
+    }
+
+    //Check if plants need watering
+    soilWatering.toggleWatering();
   }
 }
