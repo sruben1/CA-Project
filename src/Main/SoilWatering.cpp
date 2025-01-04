@@ -1,7 +1,23 @@
 #include "SoilWatering.h"
+#include "AccelStepper.h"
+
+AccelStepper stepperX;
+AccelStepper stepperY;
 
 SoilWatering::SoilWatering() {
-  // empty constructor
+  // Initialize with pin sequence IN1-IN3-IN2-IN4! Please do not change! (Or ask Luis)
+  stepperX = AccelStepper(MotorInterfaceType, motorPinX1, motorPinX3, motorPinX2, motorPinX4);
+  stepperY = AccelStepper(MotorInterfaceType, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
+
+  stepperX.setMaxSpeed(maxSpeed);      // Maximum steps per second
+  stepperX.setAcceleration(acceleration);  // Steps per second squared
+  stepperY.setMaxSpeed(maxSpeed);      // Maximum steps per second
+  stepperY.setAcceleration(acceleration);  // Steps per second squared
+
+  // Setting the current position of the stepper motors as 0. 
+  // TODO: Implement homing sequence if we have time left
+  stepperX.setCurrentPosition(0);
+  stepperY.setCurrentPosition(0);
 }
 
 // Sets the constants to be used from  
@@ -85,15 +101,29 @@ void SoilWatering::toggleWatering() {
 
 void SoilWatering::moveTo(int arrayPosition) {
   int x, y;
+
   if (arrayPosition == 10){ // Homing of positions
     x = 0;
     y = 0;
   } else{
     mapPosition(arrayPosition, x, y); // Map the position to the plant grid
   }
+
   logger->d("Moving to position (" + String(x) + ", " + String(y) + ").");
 
-  // TODO: Implement stepper logic
+  // Define where to move to
+  stepperX.moveTo(x);
+  stepperY.moveTo(y);
+
+  // Move in x direction
+  while (stepperX.distanceToGo() != 0) {
+    stepperX.run();  // Run the motor to the target position
+  }
+
+  // Move in y direction
+  while (stepperY.distanceToGo() != 0) {
+    stepperY.run();  // Run the motor to the target position
+  }
 
   logger->d("Arrived at position (" + String(x) + ", " + String(y) + ").");
 }
@@ -101,13 +131,19 @@ void SoilWatering::moveTo(int arrayPosition) {
 void SoilWatering::mapPosition(int index, int& x, int& y) {
   // TODO think of a good way to map index to motor position
   // Could be like this
+  /*
   if (index == 0){
     x = 0;
     y = 0;
   }
+  */
   // Or linear mapping like
-  row = index / gridWidth;     // Determine the row
-  column = index % gridWidth;  // Determine the column
+  x = index / gridWidth;     // Determine the row
+  y = index % gridWidth;  // Determine the column
+
+  // Add multiplier and offset from 0 0
+  x = x*2048 + 2048 // Ex: x=0 -> xPos 2048, x = 1 -> xPos 4096
+  y = y*2048 + 2049
 }
 
 void SoilWatering::openValve() {
@@ -125,6 +161,31 @@ void SoilWatering::closeValve() {
   delay(500);  // Small delay to allow the servo to physically move
   servo.detach();  // Detach the servo to save power and prevent unwanted movements
 }
+
+// Logic to home steppers example:
+/*
+void SoilWatering::homeStepper() {
+  stepperX.setSpeed(-200);  // Move in the direction towards the home switch
+
+  // Move the stepper until the limit switch is triggered
+  while (digitalRead(HOME_SWITCH_PIN) == HIGH) {
+    stepperX.runSpeed();  // Run the motor at the set speed
+  }
+
+  // Stop the motor
+  stepperX.stop();
+  delay(100);  // Allow the motor to stop completely
+
+  // Move slightly away from the switch to clear it
+  stepperX.move(100);
+  while (stepperX.isRunning()) {
+    stepperX.run();
+  }
+
+  // Set the current position to 0
+  stepperX.setCurrentPosition(0);
+}
+*/
 
 // Emergency stop function
 void SoilWatering::forceStop() {

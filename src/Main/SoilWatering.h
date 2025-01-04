@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <SimpleLogger.h>
+#include <AccelStepper.h>
 
 class SoilWatering {
 private:
@@ -24,16 +25,35 @@ private:
   uint8_t head = 0;
   uint8_t count = 0;
 
+  // Stepper variables
+  // TODO: Replace with correct pins
+  constexpr int motorPin1X = 22;
+  constexpr int motorPin2X = 24;
+  constexpr int motorPin3X = 26;
+  constexpr int motorPin4X = 28;
+
+  constexpr int motorPin1Y = 23;
+  constexpr int motorPin2Y = 25;
+  constexpr int motorPin3Y = 27;
+  constexpr int motorPin4Y = 29;
+
+  constexpr int MotorInterfaceType = 8; //4 wire motor in half step mode
+
+  constexpr int maxSpeed = 650; // Maximum allowed steps per second
+  constexpr int acceleration = 250;
+
   // Private queue functions
   void queueAdd(uint8_t value);
   uint8_t queueGetNext();
 
   // Private watering functions
-  void moveTo();
-  void mapPosition();
   void openValve();
   void closevalve();
-  
+
+  // Stepper functions
+  void moveTo();
+  void mapPosition();
+
 
 public:
   // Constructor
