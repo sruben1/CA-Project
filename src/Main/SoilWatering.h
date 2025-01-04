@@ -28,6 +28,13 @@ private:
   void queueAdd(uint8_t value);
   uint8_t queueGetNext();
 
+  // Private watering functions
+  void moveTo();
+  void mapPosition();
+  void openValve();
+  void closevalve();
+  
+
 public:
   // Constructor
   explicit SoilWatering();
