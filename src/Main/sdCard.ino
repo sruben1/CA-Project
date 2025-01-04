@@ -15,7 +15,9 @@ uint8_t* getPreferences(){
 *   Change one preference at position i to a new value
 */
 void setPreferences(uint8_t* new_val, int* i){
-  preferences[*i] = *new_val;
+  if(*i < 6){
+    preferences[*i] = *new_val;
+  }
 }
 
 /**
@@ -41,14 +43,14 @@ void storeData(uint8_t* humidityData, float* bme280Data, SimpleLogger& logger){
 
   //Check if the file is still here -> fails if there is no SD Card
   if(dataFile){
-    SD.print(*humidityData);
-    SD.print(",");
+    dataFile.print(*humidityData);
+    dataFile.print(",");
 
     for (int i = 0; i < 4; i++){
-      SD.print(*(bme280Data+i));
-      SD.print(",");
+      dataFile.print(*(bme280Data+i));
+      dataFile.print(",");
     }
-    SD.println("");
+    dataFile.println("");
   } else {
     logger.c("ERROR: Could not open data-file, is SD card unplugged?");
   }
