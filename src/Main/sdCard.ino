@@ -2,7 +2,7 @@
 #include <SD.h>
 
 //set Standart preferences:
-static uint8_t preferences[6] = {0,0,0,0,0,0};
+static int preferences[12] = {0,0,0,0,0,0,0,0,0,30000,40,10};
 
 /**
 *   returns pointer to the first preference out of an array of 6
@@ -24,14 +24,19 @@ void setPreferences(uint8_t* new_val, int i){
 *   Reads Preferences from SD card
 */
 void readPreferences (SimpleLogger& logger){
-  File prefFile = SD.open("preferences.txt", FILE_READ);
+  File prefFile = SD.open("pref.txt", FILE_READ);
 
   if(prefFile){
+    char c;
     while(prefFile.available()){
-      //TODO: define how preferences look like and how they are read
+      c = prefFile.read();
+      //TODO: Characters in ints umwandeln und speichern
+      //Einfach fürs debugging im Moment:
+      Serial.print(c);
     }
+    
   } else {
-    logger.c("ERROR: Could not open/create preferences-file, is SD card unplugged?");
+    logger.c("ERROR: Could not open/create preferences-file to read preferences, is SD card unplugged?");
   }
   prefFile.close();
 }
@@ -41,17 +46,17 @@ void readPreferences (SimpleLogger& logger){
 */
 void storePreferences (SimpleLogger& logger){
   //Remove old file
-  SD.remove("preferences.txt");
+  SD.remove("pref.txt");
 
   //Create and open new file to write in
-  File prefFile = SD.open("preferences.txt", FILE_WRITE);
+  File prefFile = SD.open("pref.txt", FILE_WRITE);
   if(prefFile){
     for(int i = 0; i < (sizeof(preferences)/sizeof(preferences[0])); i++){
       prefFile.print(preferences[i]);
       prefFile.print(",");
     }
   } else {
-    logger.c("ERROR: Could not open/create preferences-file, is SD card unplugged?");
+    logger.c("ERROR: Could not open/create preferences-file to store preferences, is SD card unplugged?");
   }
   prefFile.close();
 

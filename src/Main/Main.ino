@@ -73,8 +73,7 @@ void setup() {
   Serial.begin(SERIAL_BAUD);     //For debugging
   while (!Serial) {}             // Wait
   logger.enable(true);
-  //logger.info("Test logger");
-  //logger.i("Test same logger");
+  logger.i("Booting up Arduino...");
 
   // SENSORS:
   //=========
