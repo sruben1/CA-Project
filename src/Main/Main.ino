@@ -5,7 +5,6 @@
 #include <SD.h>            // https://github.com/arduino-libraries/SD
 #include <SimpleLogger.h>  // for debugging, https://github.com/DouglasFlores-fun/SimpleLogger
 #include "SoilWatering.h"  // Custom library made by us, to have a cleaner code structure.
-#include <sdCard.ino>
 
 #define SERIAL_BAUD 115200  // Rate used for serial communication
 
@@ -121,10 +120,10 @@ void setup() {
   if (!SD.begin()) {
     logger.c("SD initialization failed");
   } else {
-    logger.d("SD Card succesfully initialised")
+    logger.d("SD Card succesfully initialised");
   }
   //try to read preferences from SD Card
-  sdCard.readPreferences(&logger);
+  readPreferences(&logger);
 }
 
 void loop() {
@@ -183,10 +182,10 @@ void loop() {
 
     //get values
     uint8_t* humidityData = soilWatering.collectSoilHumidityValues();
-    float* bme280Data = storeBME280Data(&logger);
+    float* bme280Data = getBME280Data(&logger);
 
     //store everything on SD-Card
-    sdCard.storeData(humidityData,bme280Data,&logger);
+    storeData(humidityData,bme280Data,&logger);
 
     //Check if plants need watering
     soilWatering.toggleWatering();

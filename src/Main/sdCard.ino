@@ -14,8 +14,10 @@ uint8_t* getPreferences(){
 /**
 *   Change one preference at position i to a new value
 */
-void setPreferences(uint8_t* new_val, int* i){
-  preferences[*i] = *new_val;
+void setPreferences(uint8_t* new_val, int i){
+  if(i < (sizeof(preferences)/sizeof(preferences[0]))){
+    preferences[i] = *new_val;
+  }
 }
 
 /**
@@ -25,11 +27,34 @@ void readPreferences (SimpleLogger& logger){
   File prefFile = SD.open("preferences.txt", FILE_READ);
 
   if(prefFile){
-    //TODO: define how preferences look like and how they are read
+    while(prefFile.available()){
+      //TODO: define how preferences look like and how they are read
+    }
   } else {
-    logger.c("ERROR: Could not open data-file, is SD card unplugged?");
+    logger.c("ERROR: Could not open/create preferences-file, is SD card unplugged?");
   }
   prefFile.close();
+}
+
+/**
+*   Stores the current preferences into the SD card if available. This overwrites old preferences if present.
+*/
+void storePreferences (SimpleLogger& logger){
+  //Remove old file
+  SD.remove("preferences.txt");
+
+  //Create and open new file to write in
+  File prefFile = SD.open("preferences.txt", FILE_WRITE);
+  if(prefFile){
+    for(int i = 0; i < (sizeof(preferences)/sizeof(preferences[0])); i++){
+      prefFile.print(preferences[i]);
+      prefFile.print(",");
+    }
+  } else {
+    logger.c("ERROR: Could not open/create preferences-file, is SD card unplugged?");
+  }
+  prefFile.close();
+
 }
 
 /**
@@ -41,16 +66,16 @@ void storeData(uint8_t* humidityData, float* bme280Data, SimpleLogger& logger){
 
   //Check if the file is still here -> fails if there is no SD Card
   if(dataFile){
-    SD.print(*humidityData);
-    SD.print(",");
+    dataFile.print(*humidityData);
+    dataFile.print(",");
 
     for (int i = 0; i < 4; i++){
-      SD.print(*(bme280Data+i));
-      SD.print(",");
+      dataFile.print(*(bme280Data+i));
+      dataFile.print(",");
     }
-    SD.println("");
+    dataFile.println("");
   } else {
-    logger.c("ERROR: Could not open data-file, is SD card unplugged?");
+    logger.c("ERROR: Could not open/create data-file, is SD card unplugged?");
   }
   
   //close the file at the end
