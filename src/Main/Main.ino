@@ -55,7 +55,7 @@ const char* subPageStandardValueNames[MENU_PAGE_COUNT][7] = { { "Yes", "No", "Ca
 #define SENSOR_READ_INTERVAL 30000  // long value in millis
 
 // SD-Card-Logger:
-//default pin on mega are: 50,51,52 and 53 is the SS pin
+//default pin on mega are: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (CS/SS).
 
 // Soil Humidity sensors:
 SoilWatering soilWatering;      // Declare general instance to use.
@@ -123,6 +123,8 @@ void setup() {
   }
   //try to read preferences from SD Card
   readPreferences(&logger);
+
+  logger.d("Setup finished!");
 }
 
 void loop() {
