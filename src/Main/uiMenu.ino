@@ -11,10 +11,10 @@ void printLcdText(const String& line1, const String& line2) {
   lcd.setCursor(0, 1);
   lcd.print(line2);
 }
-
+/*
 /**
 *  Overloaded print method (string and int value to concatenate for each line):
-*/
+
 void printLcdText(const String& str1l1, const int intl1, const String& str1l2, const int intl2) {
   lcd.clear();
   line1 = "";
@@ -32,7 +32,7 @@ void printLcdText(const String& str1l1, const int intl1, const String& str1l2, c
   lcd.setCursor(0, 1);
   lcd.print(line2);
 }
-
+*/
 /**
 *  Display on the screen that system is busy
 */

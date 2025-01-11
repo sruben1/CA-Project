@@ -5,6 +5,7 @@
 #include <SD.h>            // https://github.com/arduino-libraries/SD
 #include <SimpleLogger.h>  // for debugging, https://github.com/DouglasFlores-fun/SimpleLogger
 #include "SoilWatering.h"  // Custom library made by us, to have a cleaner code structure.
+#include "UiMenu.h"  // Custom library made by us, to have a cleaner code structure.
 
 #define SERIAL_BAUD 115200  // Rate used for serial communication
 
@@ -16,15 +17,17 @@ SimpleLogger logger(LOG_LEVEL_DEBUG);
 // MultiTasking:
 //=============
 
-unsigned long previousMillis = 0;  // will store last time main loop iterrated
+unsigned long previousSensorsMillis = 0;  // will store last time sensors iterrated
+unsigned long previousWateringMillis = 0;  // will store last time watering run iterrated
 
 // Main Menu:
 //===========
 
 // Define Pins used for LCD Display
 LiquidCrystal lcd(4, 5, 14, 15, 16, 17);
-String line1;  //For more efficient way to handle prints.
-String line2;
+
+//Menu:
+UiMenu uiMenu;
 
 // Menu navigation buttons
 #define NULL_BUTTON_VALUE 0  // Null value
@@ -36,23 +39,12 @@ volatile uint8_t nextMenuBtnToHandle = NULL;  // for interrupt logic, TODO
 // Special Button:
 #define EMERGENCY_STOP_BUTTON 3
 
-// Main menu page selctor:
-bool notInSubMenu = true;
-int menuPage = 0;
-#define MENU_PAGE_COUNT 5
-const char* mainPageNames[MENU_PAGE_COUNT] = { "First", "Seccond", "Third", "Fourth", "Fifth" };
-
-// Sub menu implementation:
-int subPageValue = 0;
-int currSubPageCount = 1;                                                                                        // init with dummy value
-const int subPageValuesRange[MENU_PAGE_COUNT] = { 3, 3, 3, 3, 5 };                                               // top range of parameterable sub page values
-const int subPageNameAssignment[MENU_PAGE_COUNT]{ 0, 0, 0, 0, 1 };                                               // Which naming scheme is used for the subpage variables, selects index of "subPageStandardValueNames"
-const char* subPageStandardValueNames[MENU_PAGE_COUNT][7] = { { "Yes", "No", "Cancel" }, { 0, 1, 2, -2, -1 } };  // TODO: check 2nd dimension array size
-
 // Sensors:
 //=========
 
 #define SENSOR_READ_INTERVAL 30000  // long value in millis
+// TODO!! :
+#define APPROX_MAIN_LOOP_TIME 2000  // long value in millis
 
 // SD-Card-Logger:
 //default pin on mega are: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (CS/SS).
@@ -61,6 +53,7 @@ const char* subPageStandardValueNames[MENU_PAGE_COUNT][7] = { { "Yes", "No", "Ca
 SoilWatering soilWatering;      // Declare general instance to use.
 #define soilNodesRngStart 0     // TODO!! : Make sure these are correct!
 #define needsWateringBelow 511  // TODO : test needed value + do we want individual setting section?
+unsigned int howLongToWater = 0; 
 
 // Temp/Humid/Pressure sensor:
 BME280I2C bme;
@@ -98,10 +91,11 @@ void setup() {
 
   // UI Menu:
   //=========
+  uiMenu.begin(logger, getPreferences(), 14, printLcdText, storePreferences);
   // LCD:
   lcd.begin(16, 2);
-  line1.reserve(17);
-  line2.reserve(17);
+  //line1.reserve(17);
+  //line2.reserve(17);
   //Buttons:
   pinMode(BTN_DOWN, INPUT_PULLUP);
   pinMode(BTN_UP, INPUT_PULLUP);
@@ -128,8 +122,6 @@ void setup() {
 }
 
 void loop() {
-  unsigned long currentMillis = millis();
-
   // MainMenu:
   //==========
   // Menu Buttons
@@ -141,45 +133,23 @@ void loop() {
   if (btnCurrentlyHandled != NULL_BUTTON_VALUE) {
     switch (btnCurrentlyHandled) {
       case BTN_DOWN:
-        if (notInSubMenu) {
-          menuPage = unsignedModulo(menuPage - 1, MENU_PAGE_COUNT);
-          printLcdText("On Page:" + String(menuPage), "");
-        } else {
-          subPageValue = unsignedModulo(subPageValue - 1, currSubPageCount);
-          printLcdText("Page:" + String(menuPage), "On Sub Value:" + String(subPageValue));
-        }
-        delay(500);
+        uiMenu.handleButtonDown();
         break;
       case BTN_UP:
-        if (notInSubMenu) {
-          menuPage = unsignedModulo(menuPage + 1, MENU_PAGE_COUNT);
-          printLcdText("On Page:" + menuPage, "");
-        } else {
-          subPageValue = unsignedModulo(subPageValue + 1, currSubPageCount);
-
-          printLcdText("Page:", menuPage, "On Sub Value:", subPageValue);
-        }
-        delay(500);
+        uiMenu.handleButtonUp();
         break;
       case BTN_ENTER:
-        if (notInSubMenu) {
-          printLcdText("Entered:" + menuPage, "");
-          currSubPageCount = subPageValuesRange[menuPage];  // Set the range of possible values for this sub page
-          notInSubMenu = false;
-        } else {
-          printLcdText("Exited:" + menuPage, "");
-          notInSubMenu = true;
-        }
-        delay(500);
+        uiMenu.handleButtonEnter();
         break;
     }
   }
 
   // SensorHandling:
   //================
+  unsigned long currentMillis = millis();
   // TODO!: verify timing in regards to logic and program flow:
-  if (currentMillis - previousMillis >= SENSOR_READ_INTERVAL) {
-    previousMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
+  if (currentMillis - previousSensorsMillis >= SENSOR_READ_INTERVAL) {
+    previousSensorsMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
 
     //get values
     uint8_t* humidityData = soilWatering.collectSoilHumidityValues();
@@ -188,7 +158,33 @@ void loop() {
     //store everything on SD-Card
     storeData(humidityData,bme280Data,&logger);
 
-    //Check if plants need watering
-    soilWatering.toggleWatering();
+
   }
+  /*
+  // Calculate the available time for watering
+  unsigned long availableTime = SENSOR_READ_INTERVAL - (howLongToWater + APPROX_MAIN_LOOP_TIME);
+
+  // Ensure available time is positive
+  if (availableTime <= 0) {
+      availableTime = howLongToWater; // Minimum available time must fit the watering task
+  }
+
+  // Dynamically calculate the fraction to balance the interval
+  float dynamicFraction = (float) howLongToWater / availableTime;
+
+  // Clamp the fraction to a maximum of 1.0
+  if (dynamicFraction > 1.0) {
+      dynamicFraction = 1.0;
+  }
+
+  // Adjust the watering interval using the dynamic fraction
+  unsigned long adjustedWateringInterval = availableTime * dynamicFraction;
+
+  // Perform the conditional check
+  if (currentMillis - previousWateringMillis >= adjustedWateringInterval + APPROX_MAIN_LOOP_TIME) {
+          //Check if plants need watering
+    soilWatering.toggleWatering();
+    previousWateringMillis = currentMillis;
+  }
+  */
 }
