@@ -13,6 +13,11 @@
 // Supported levels: CRITICAL WARNING INFO DEBUG via logger.c , .w or .[...]
 SimpleLogger logger(LOG_LEVEL_DEBUG);
 
+//Preferences:
+//=============
+//set Standart preferences: {Sensor Interval: 0, min Soil-Humidity per pot: 1-9, min air temp: 10, min air humidity: 11}
+static int preferences[12] = {30000,0,0,0,0,0,0,0,0,0,40,10};
+
 // MultiTasking:
 //=============
 
@@ -52,7 +57,7 @@ const char* subPageStandardValueNames[MENU_PAGE_COUNT][7] = { { "Yes", "No", "Ca
 // Sensors:
 //=========
 
-#define SENSOR_READ_INTERVAL 30000  // long value in millis
+long int SENSOR_READ_INTERVAL;  // long value in millis
 
 // SD-Card-Logger:
 //default pin on mega are: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (CS/SS).
@@ -121,8 +126,11 @@ void setup() {
   } else {
     logger.d("SD Card succesfully initialised");
   }
-  //try to read preferences from SD Card
-  readPreferences(&logger);
+  //try to read preferences from SD Card, they remain standart if no SD-Card is found.
+  readPreferences();
+
+
+  long int SENSOR_READ_INTERVAL = preferences[0];
 
   logger.d("Setup finished!");
 }
@@ -186,7 +194,7 @@ void loop() {
     float* bme280Data = getBME280Data(&logger);
 
     //store everything on SD-Card
-    storeData(humidityData,bme280Data,&logger);
+    storeData(humidityData,bme280Data);
 
     //Check if plants need watering
     soilWatering.toggleWatering();
