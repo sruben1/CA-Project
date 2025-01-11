@@ -14,6 +14,11 @@
 // Supported levels: CRITICAL WARNING INFO DEBUG via logger.c , .w or .[...]
 SimpleLogger logger(LOG_LEVEL_DEBUG);
 
+//Preferences:
+//=============
+//set Standart preferences: {Sensor Interval: 0, min Soil-Humidity per pot: 1-9, min air temp: 10, min air humidity: 11}
+static int preferences[12] = {30,0,0,0,0,0,0,0,0,0,40,10};
+
 // MultiTasking:
 //=============
 
@@ -41,8 +46,7 @@ volatile uint8_t nextMenuBtnToHandle = NULL;  // for interrupt logic, TODO
 
 // Sensors:
 //=========
-
-#define SENSOR_READ_INTERVAL 30000  // long value in millis
+long int SENSOR_READ_INTERVAL;  // long value in millis
 // TODO!! :
 #define APPROX_MAIN_LOOP_TIME 2000  // long value in millis
 
@@ -115,8 +119,11 @@ void setup() {
   } else {
     logger.d("SD Card succesfully initialised");
   }
-  //try to read preferences from SD Card
-  readPreferences(&logger);
+  //try to read preferences from SD Card, they remain standart if no SD-Card is found.
+  readPreferences();
+
+  //Read preferences are given to relevant variables
+  long int SENSOR_READ_INTERVAL = preferences[0]*1000;
 
   logger.d("Setup finished!");
 }
@@ -156,7 +163,7 @@ void loop() {
     float* bme280Data = getBME280Data(&logger);
 
     //store everything on SD-Card
-    storeData(humidityData,bme280Data,&logger);
+    storeData(humidityData,bme280Data);
 
 
   }
