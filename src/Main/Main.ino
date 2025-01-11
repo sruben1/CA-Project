@@ -16,7 +16,7 @@ SimpleLogger logger(LOG_LEVEL_DEBUG);
 //Preferences:
 //=============
 //set Standart preferences: {Sensor Interval: 0, min Soil-Humidity per pot: 1-9, min air temp: 10, min air humidity: 11}
-static int preferences[12] = {30000,0,0,0,0,0,0,0,0,0,40,10};
+static int preferences[12] = {30,0,0,0,0,0,0,0,0,0,40,10};
 
 // MultiTasking:
 //=============
@@ -129,8 +129,8 @@ void setup() {
   //try to read preferences from SD Card, they remain standart if no SD-Card is found.
   readPreferences();
 
-
-  long int SENSOR_READ_INTERVAL = preferences[0];
+  //Read preferences are given to relevant variables
+  long int SENSOR_READ_INTERVAL = preferences[0]*1000;
 
   logger.d("Setup finished!");
 }
