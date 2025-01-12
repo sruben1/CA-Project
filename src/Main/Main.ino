@@ -72,15 +72,15 @@ BME280I2C bme;
 
 // Stepper Pins
 // TODO: Replace with correct pins
-#define motorPin1X = 22;
-#define motorPin2X = 24;
-#define motorPin3X = 26;
-#define motorPin4X = 28;
+#define motorPinX1 22
+#define motorPinX2 24
+#define motorPinX3 26
+#define motorPinX4 28
 
-#define motorPin1Y = 23;
-#define motorPin2Y = 25;
-#define motorPin3Y = 27;
-#define motorPin4Y = 29;
+#define motorPinY1 23
+#define motorPinY2 25
+#define motorPinY3 27
+#define motorPinY4 29
 
 void setup() {
   // DEBUGGING:

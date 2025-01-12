@@ -19,7 +19,7 @@ private:
   const int checkNeedsWateringEvery = 5;
   // bool isCurrentlyWatering = false;
   int wateringDuration = 3000; // Letting water flow for 3 seconds
-  int gridWidth = 3; // 3x3 grid to calculate positions of plant
+  #define gridWidth 3 // 3x3 grid to calculate positions of plant
 
   // Watering queue variables
   uint8_t buffer[9] = { 0 };
@@ -40,10 +40,10 @@ private:
   int motorPin3Y;
   int motorPin4Y;
 
-  #define MotorInterfaceType = 8; //4 wire motor in half step mode
+  #define MotorInterfaceType 8 //4 wire motor in half step mode
 
-  #define maxSpeed = 650; // Maximum allowed steps per second
-  #define acceleration = 250;
+  #define maxSpeed 650 // Maximum allowed steps per second
+  #define acceleration 250
 
   // Private queue functions
   void queueAdd(uint8_t value);
@@ -51,19 +51,19 @@ private:
 
   // Private watering functions
   void openValve();
-  void closevalve();
+  void closeValve();
 
   // Stepper functions
-  void moveTo();
-  void mapPosition();
+  void moveTo(uint8_t arrayPosition);
+  void mapPosition(int index, uint8_t& x, uint8_t& y);
 
 
-public:
+  public:
   // Constructor
   explicit SoilWatering();
 
   // Public methods
-  void begin(int soilNodesRngStart, int needsWateringBelow, int* moistureLevels, SimpleLogger& logger);
+  void SoilWatering::begin(int soilNodesRngStart, int* moistureLevels, SimpleLogger& logger, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4);
   uint8_t* collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();
