@@ -7,11 +7,18 @@ SoilWatering::SoilWatering() {
 // Sets the constants to be used
 void SoilWatering::begin(int soilNodesRngStart, int needsWateringBelow, int* moistureLevels, SimpleLogger& logger, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4) {
   this->soilNodesRngStart = soilNodesRngStart;
-  this->needsWateringBelow = needsWateringBelow;
+  // this->needsWateringBelow = needsWateringBelow;
   this->soilMoistureLevels = moistureLevels;
-  this->logger = &logger; 
+  this->logger = &logger;
 
   this->motorPinX1 = motorPinX1;
+  this->motorPinX1 = motorPinX2;
+  this->motorPinX1 = motorPinX3;
+  this->motorPinX1 = motorPinX4;
+  this->motorPinX1 = motorPinY1;
+  this->motorPinX1 = motorPinY2;
+  this->motorPinX1 = motorPinY3;
+  this->motorPinX1 = motorPinY4;
 
   // Initialize with pin sequence IN1-IN3-IN2-IN4! Please do not change! (Or ask Luis)
   stepperX = AccelStepper(MotorInterfaceType, motorPinX1, motorPinX3, motorPinX2, motorPinX4);

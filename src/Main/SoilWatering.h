@@ -9,7 +9,7 @@ class SoilWatering {
 private:
   // General variables
   int soilNodesRngStart;
-  int needsWateringBelow;
+  // int needsWateringBelow;
   SimpleLogger* logger = nullptr;
   int* soilMoistureLevels;
 
@@ -40,10 +40,10 @@ private:
   int motorPin3Y;
   int motorPin4Y;
 
-  constexpr int MotorInterfaceType = 8; //4 wire motor in half step mode
+  #define MotorInterfaceType = 8; //4 wire motor in half step mode
 
-  constexpr int maxSpeed = 650; // Maximum allowed steps per second
-  constexpr int acceleration = 250;
+  #define maxSpeed = 650; // Maximum allowed steps per second
+  #define acceleration = 250;
 
   // Private queue functions
   void queueAdd(uint8_t value);
@@ -63,7 +63,7 @@ public:
   explicit SoilWatering();
 
   // Public methods
-  void begin(int soilNodesRngStart, int needsWateringBelow, SimpleLogger& logger);
+  void begin(int soilNodesRngStart, int needsWateringBelow, int* moistureLevels, SimpleLogger& logger);
   uint8_t* collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();

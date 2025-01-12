@@ -65,7 +65,7 @@ long int SENSOR_READ_INTERVAL;  // long value in millis
 // Soil Humidity sensors:
 SoilWatering soilWatering;      // Declare general instance to use.
 #define soilNodesRngStart 0     // TODO!! : Make sure these are correct!
-#define needsWateringBelow 511  // TODO : test needed value + do we want individual setting section?
+// #define needsWateringBelow 511  // TODO : test needed value + do we want individual setting section? EDIT: Yes we changed it
 
 // Temp/Humid/Pressure sensor:
 BME280I2C bme;
@@ -93,7 +93,6 @@ void setup() {
 
   // SENSORS:
   //=========
-  soilWatering.begin(soilNodesRngStart, needsWateringBelow, &logger);
   Wire.begin();
 
   while (!bme.begin()) {
@@ -140,6 +139,10 @@ void setup() {
   //try to read preferences from SD Card, they remain standart if no SD-Card is found.
   readPreferences();
 
+  // TODO: Check if the getPreferences() really hast the moistureLevelsAtPos 0-8 or pass only a copy of the array with the values needed
+  // Initialize alle values that are important to the watering system. DO NOT CHANGE THE ORDER OF PINS for the steppers
+  soilWatering.begin(soilNodesRngStart, getPreferences(), &logger, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
+
   //Read preferences are given to relevant variables
   long int SENSOR_READ_INTERVAL = preferences[0]*1000;
 
@@ -153,7 +156,7 @@ void loop() {
   //==========
   // Menu Buttons
 
-  //No interrupt safety needed, since atomic operations (and overwriting value to null even if interrupt occures inbetween ok, since the other input not yet handled):
+  // No interrupt safety needed, since atomic operations (and overwriting value to null even if interrupt occures inbetween ok, since the other input not yet handled):
   uint8_t btnCurrentlyHandled = nextMenuBtnToHandle;
   nextMenuBtnToHandle = NULL_BUTTON_VALUE;
 
