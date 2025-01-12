@@ -65,6 +65,17 @@ SoilWatering soilWatering;      // Declare general instance to use.
 // Temp/Humid/Pressure sensor:
 BME280I2C bme;
 
+// Stepper Pins
+// TODO: Replace with correct pins
+#define motorPin1X = 22;
+#define motorPin2X = 24;
+#define motorPin3X = 26;
+#define motorPin4X = 28;
+
+#define motorPin1Y = 23;
+#define motorPin2Y = 25;
+#define motorPin3Y = 27;
+#define motorPin4Y = 29;
 
 void setup() {
   // DEBUGGING:

@@ -11,13 +11,14 @@ private:
   int soilNodesRngStart;
   int needsWateringBelow;
   SimpleLogger* logger = nullptr;
+  int* soilMoistureLevels;
 
   // Main watering logic variables
   int currentSoilHumidityAvrg[9] = { 0 };
   uint8_t currentAvrgIteration = 0;
   const int checkNeedsWateringEvery = 5;
   // bool isCurrentlyWatering = false;
-  int wateringDuration = 10000; // Letting water flow for 10 seconds
+  int wateringDuration = 3000; // Letting water flow for 3 seconds
   int gridWidth = 3; // 3x3 grid to calculate positions of plant
 
   // Watering queue variables
@@ -26,16 +27,18 @@ private:
   uint8_t count = 0;
 
   // Stepper variables
-  // TODO: Replace with correct pins
-  constexpr int motorPin1X = 22;
-  constexpr int motorPin2X = 24;
-  constexpr int motorPin3X = 26;
-  constexpr int motorPin4X = 28;
+  AccelStepper stepperX;
+  AccelStepper stepperY;
 
-  constexpr int motorPin1Y = 23;
-  constexpr int motorPin2Y = 25;
-  constexpr int motorPin3Y = 27;
-  constexpr int motorPin4Y = 29;
+  int motorPin1X;
+  int motorPin2X;
+  int motorPin3X;
+  int motorPin4X;
+
+  int motorPin1Y;
+  int motorPin2Y;
+  int motorPin3Y;
+  int motorPin4Y;
 
   constexpr int MotorInterfaceType = 8; //4 wire motor in half step mode
 
@@ -64,6 +67,7 @@ public:
   uint8_t* collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();
+  void demo();
 };
 
 #endif  // SOILWATERING_H

@@ -1,14 +1,23 @@
 #include "SoilWatering.h"
 #include "AccelStepper.h"
 
-AccelStepper stepperX;
-AccelStepper stepperY;
-
 SoilWatering::SoilWatering() {
+}
+
+// Sets the constants to be used
+void SoilWatering::begin(int soilNodesRngStart, int needsWateringBelow, int* moistureLevels, SimpleLogger& logger, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4) {
+  this->soilNodesRngStart = soilNodesRngStart;
+  this->needsWateringBelow = needsWateringBelow;
+  this->soilMoistureLevels = moistureLevels;
+  this->logger = &logger; 
+
+  this->motorPinX1 = motorPinX1;
+
   // Initialize with pin sequence IN1-IN3-IN2-IN4! Please do not change! (Or ask Luis)
   stepperX = AccelStepper(MotorInterfaceType, motorPinX1, motorPinX3, motorPinX2, motorPinX4);
   stepperY = AccelStepper(MotorInterfaceType, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
 
+  // These settings are not passed from main as they don't have to be changed after calibrating of settings has been done.
   stepperX.setMaxSpeed(maxSpeed);      // Maximum steps per second
   stepperX.setAcceleration(acceleration);  // Steps per second squared
   stepperY.setMaxSpeed(maxSpeed);      // Maximum steps per second
@@ -18,13 +27,6 @@ SoilWatering::SoilWatering() {
   // TODO: Implement homing sequence if we have time left
   stepperX.setCurrentPosition(0);
   stepperY.setCurrentPosition(0);
-}
-
-// Sets the constants to be used from  
-void SoilWatering::begin(int soilNodesRngStart, int needsWateringBelow, SimpleLogger& logger) {
-  this->soilNodesRngStart = soilNodesRngStart;
-  this->needsWateringBelow = needsWateringBelow;
-  this->logger = &logger; 
 }
 
 // Add a value to the queue
@@ -71,7 +73,7 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
     }
     if (currentAvrgIteration == checkNeedsWateringEvery - 1) {
       for (int i = 0; i < 9; i++) {
-        if (currentSoilHumidityAvrg[i] < needsWateringBelow) {
+        if (currentSoilHumidityAvrg[i] < soilMoistureLevels[i]) {
           logger->d("Plant at position " + String(i) + " needs watering.");
           queueAdd(i); // Add plant's position to the watering queue
         }
@@ -84,19 +86,17 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
 
 // Toggle watering based on the state
 void SoilWatering::toggleWatering() {
-  while (true) {
-    uint8_t nextValue = queueGetNext();
-    if (nextValue == 10) {
-        logger->i("No more plants to water. Stopping.");
-        break;  // Exit the loop if no more plants need watering
-    }
-    logger->d("Watering at position "+String(nextValue));
-    moveTo(nextValue);
-    openValve();
-    delay(wateringDuration);  // Wait for the watering to complete
-    closeValve();
+  uint8_t nextValue = queueGetNext();
+  if (nextValue == 10) {
+      logger->i("No more plants to water. Stopping.");
+      break;  // Exit the loop if no more plants need watering
   }
-  moveTo(10); // Home position of XY-Table
+  logger->d("Watering at position "+String(nextValue));
+  moveTo(nextValue);
+  openValve();
+  delay(wateringDuration);  // Wait for the watering to complete
+  closeValve();
+  //moveTo(10); Home position of XY-Table EDIT: Removed after iterative approach each cycle
 }
 
 void SoilWatering::moveTo(int arrayPosition) {
@@ -186,6 +186,10 @@ void SoilWatering::homeStepper() {
   stepperX.setCurrentPosition(0);
 }
 */
+
+void SoilWatering::demo() {
+
+}
 
 // Emergency stop function
 void SoilWatering::forceStop() {
