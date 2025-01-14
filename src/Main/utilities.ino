@@ -1,11 +1,3 @@
-/*unsigned unsignedModulo(int value, unsigned int m) {
-  int mod = value % (int)m;
-  if (mod < 0) {
-    mod += m;
-  }
-  return mod;
-}
-*/
 /**
 *  Truns on and off internal led for Debug purposes
 */

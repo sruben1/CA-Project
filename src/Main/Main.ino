@@ -181,7 +181,7 @@ void loop() {
 
   }
   
-  if (currentMillis - previousWateringMillis >= wateringInterval + APPROX_MAIN_LOOP_TIME) {
+  if (currentMillis - previousWateringMillis >= howLongToWater + APPROX_MAIN_LOOP_TIME) {
     soilWatering.toggleWatering();
     previousWateringMillis = currentMillis;
   }
