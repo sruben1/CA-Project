@@ -16,12 +16,11 @@ SimpleLogger logger(LOG_LEVEL_DEBUG);
 
 //Preferences:
 //=============
-//set Standart preferences: {Sensor Interval: 0, min Soil-Humidity per pot: 1-9, min air temp: 10, min air humidity: 11}
+//set standart preferences: {Sensor Interval: 30, min Soil-Humidity per pot (1 to 9): 0-11, min air temp: 40, min air humidity: 10}
 static int preferences[12] = {30,0,0,0,0,0,0,0,0,0,40,10};
 
 // MultiTasking:
 //=============
-
 unsigned long previousSensorsMillis = 0;  // will store last time sensors iterrated
 unsigned long previousWateringMillis = 0;  // will store last time watering run iterrated
 
@@ -44,8 +43,6 @@ volatile uint8_t nextMenuBtnToHandle = NULL_BUTTON_VALUE;  // for interrupt logi
 // Sensors:
 //=========
 unsigned long SENSOR_READ_INTERVAL;  // long value in millis
-// TODO!! :
-#define APPROX_MAIN_LOOP_TIME 2000  // long value in millis
 
 // SD-Card-Logger:
 //default pin on mega are: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (CS/SS).
@@ -53,9 +50,10 @@ unsigned long SENSOR_READ_INTERVAL;  // long value in millis
 // Soil Humidity sensors:
 SoilWatering soilWatering;      // Declare general instance to use.
 #define soilNodesRngStart 0     // TODO!! : Make sure these are correct!
-// #define needsWateringBelow 511  // TODO : test needed value + do we want individual setting section? EDIT: Yes we changed it
-#define howLongToWater 3 // Time in ?unit
 
+// Soil waering timing
+#define howLongToWater 3000 // Time in millis
+#define waterAPlantEvery 15000 // Time in millis
 
 // Temp/Humid/Pressure sensor:
 BME280I2C bme;
@@ -77,19 +75,25 @@ void setup() {
   //===========
   pinMode(LED_BUILTIN, OUTPUT);  //For debugging
   Serial.begin(SERIAL_BAUD);     //For debugging
-  while (!Serial) {}             // Wait
-  logger.enable(true);
+
+  #if true // Set to true if logging should be on.
+    while (!Serial) {}             // Wait
+    logger.enable(true);
+  #else 
+    logger.enable(false);
+  #endif
+
   logger.i("Booting up Arduino...");
 
   // SENSORS:
   //=========
   Wire.begin();
-/*
+  /*
   while (!bme.begin()) {
     logger.c("Could not find BME280 sensor!");
     delay(1000);
   }
-*/
+  */
   switch (bme.chipModel()) {
     case BME280::ChipModel_BME280:
       logger.d("Found BME280 sensor! Success.");
@@ -105,8 +109,7 @@ void setup() {
   //=========
   // LCD:
   lcd.begin(16, 2);
-  //line1.reserve(17);
-  //line2.reserve(17);
+
   //Buttons:
   pinMode(BTN_DOWN, INPUT_PULLUP);
   pinMode(BTN_UP, INPUT_PULLUP);
@@ -122,26 +125,35 @@ void setup() {
   } else {
     logger.d("SD Card succesfully initialised");
   }
-  //try to read preferences from SD Card, they remain standart if no SD-Card is found.
+  // Try to read preferences from SD Card, they remain standart if no SD-Card is found.
   readPreferences();
 
-  // TODO: Check if the getPreferences() really hast the moistureLevelsAtPos 0-8 or pass only a copy of the array with the values needed
+  // Distribute the Preferences loaded form the File (or default):
+  SENSOR_READ_INTERVAL = (preferences[0]) * 1000;
+  // Copy lower soil watering threasholds (and scale value to full range):
+  static int frozenSoilThreasholdPreferences[9];
+  for(int i = 0; i < 9; i++) { 
+    frozenSoilThreasholdPreferences[i] = preferences[i + 1] * 93;
+  }
+
   // Initialize alle values that are important to the watering system. DO NOT CHANGE THE ORDER OF PINS for the steppers
-  soilWatering.begin(soilNodesRngStart, getPreferences(), &logger, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
+  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, &logger, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
   uiMenu.begin(logger, getPreferences(), 14, printLcdText, storePreferences);
-  //Read preferences are given to relevant variables
-  long int SENSOR_READ_INTERVAL = (preferences[0]) * 1000;
-  logger.d(SENSOR_READ_INTERVAL);
+  
+  logLongUnsigned("Sensor read interval := ", SENSOR_READ_INTERVAL); // (Debug)
 
   logger.d("Setup finished!");
 }
 
 void loop() {
-  // MainMenu:
-  //==========
-  // Menu Buttons
-
-  // No interrupt safety needed, since atomic operations (and overwriting value to null even if interrupt occures inbetween ok, since the other input not yet handled):
+  //Led blink to get feedback of current program activity:
+   debugLed();
+  
+  // UI Menu:
+  //===========
+  // Menu Buttons:
+  // Here no interrupt safety needed, since atomic operations (and overwriting value to null even
+  // if interrupt occures inbetween ok, since the other input not yet handled):
   uint8_t btnCurrentlyHandled = nextMenuBtnToHandle;
   nextMenuBtnToHandle = NULL_BUTTON_VALUE;
 
@@ -162,27 +174,33 @@ void loop() {
     }
   }
 
-  // SensorHandling:
-  //================
+  // Sensor Handling:
+  //=================
   unsigned long currentMillis = millis();
-  // TODO!: verify timing in regards to logic and program flow:
-  if (currentMillis - previousSensorsMillis >= SENSOR_READ_INTERVAL) {
-    logger.d("time to log! :" + (currentMillis));
-    previousSensorsMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
+  /*char buffer[64];
+  sprintf(buffer, "Sens bool: %lu ; delta: %lu", (currentMillis - previousSensorsMillis) > SENSOR_READ_INTERVAL, currentMillis - previousSensorsMillis);
+  logger.d(buffer);*/ // Used to debug timing
 
+  if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL) {
+
+    logLongUnsigned("time to log!: ", currentMillis);
+    logLongUnsigned("Sensor read interval is: ", SENSOR_READ_INTERVAL);
+    
     //get values
-    uint8_t* humidityData = soilWatering.collectSoilHumidityValues();
-    float* bme280Data = getBME280Data(&logger);
+    //uint8_t* humidityData = soilWatering.collectSoilHumidityValues();
+    //float* bme280Data = getBME280Data(&logger);
 
     //store everything on SD-Card
-    storeData(humidityData,bme280Data);
-
-    soilWatering.toggleWatering();
-
+    storeData(0,0);
+    
+    previousSensorsMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
   }
-  
-  if (currentMillis - previousWateringMillis >= howLongToWater + APPROX_MAIN_LOOP_TIME) {
-    soilWatering.toggleWatering();
-    previousWateringMillis = currentMillis;
+
+  if ((currentMillis - previousWateringMillis) >= waterAPlantEvery) {
+  logLongUnsigned("time to water! :", currentMillis);
+
+  soilWatering.toggleWatering();
+
+  previousWateringMillis = currentMillis; // Saves current value, so that the time this section ran last, can be checked.
   }
 }

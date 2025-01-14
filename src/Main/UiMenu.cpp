@@ -14,7 +14,7 @@ void UiMenu::begin(SimpleLogger& logger, int* prefrences, uint8_t currMenuPageCo
   
   // Validate menu page count
   if (currMenuPageCount != MENU_PAGE_COUNT) {
-      logger.c("Error: Menu page count mismatch");
+      logger.c("Error: Internal menu page count mismatch");
       return;
   }
   
@@ -68,7 +68,7 @@ void UiMenu::handleButtonEnter() {
                 storePreferences();
                 printLcdText("To SD:", mainPageNames[currMenuPage]);
             } else {
-                logger->w("Error: storePreferences is null");
+                logger->c("Error: storePreferences is null");
             }
         } else if (currMenuPage == 14) {  // Changed = to == for comparison
             //TODO

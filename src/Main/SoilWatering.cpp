@@ -5,10 +5,10 @@ SoilWatering::SoilWatering() {
 }
 
 // Sets the constants to be used
-void SoilWatering::begin(int soilNodesRngStart, int* moistureLevels, SimpleLogger& logger, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4) {
+void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, SimpleLogger& logger, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4) {
   this->soilNodesRngStart = soilNodesRngStart;
-  // this->needsWateringBelow = needsWateringBelow;
   this->soilMoistureLevels = moistureLevels;
+  this->wateringDuration = wateringDuration; 
   this->logger = &logger;
 
   this->motorPin1X = motorPinX1;
@@ -34,23 +34,34 @@ void SoilWatering::begin(int soilNodesRngStart, int* moistureLevels, SimpleLogge
   // TODO: Implement homing sequence if we have time left
   stepperX.setCurrentPosition(0);
   stepperY.setCurrentPosition(0);
+
+  logger.d("SoilWatering class now is intialized with variabel parameters.");
 }
 
-// Add a value to the queue
+/**
+*  Add a value to the queue
+*/
 void SoilWatering::queueAdd(uint8_t value) {
+  //Skip if already in queue:
+  if (getInQueueState(value)){
+    logUnsignedDebug("INFO: Cell nbr %u skipped since status set as alreay in queue.", value);
+    return;
+  }
+
   if (value > 9) {
-    char buffer[64];
-    sprintf(buffer, "ERROR: Watering cell value must be between 0 and 9, but was %u", value);
-    logger->w(buffer);
+    logUnsignedDebug("ERROR: Watering cell value must be between 0 and 9, but was %u", value);
     return;
   }
 
   buffer[head] = value;
   head = (head + 1) % 9;
   count = min(count + 1, 9);
+  setInQueueState(value, true);
 }
 
-// Retrieve the next value from the queue
+/**
+*  Retrieve the next value from the queue
+*/
 uint8_t SoilWatering::queueGetNext() {
   if (count == 0) {
     return 10;  // Null value
@@ -59,8 +70,34 @@ uint8_t SoilWatering::queueGetNext() {
   int retrieveIndex = (head - count + 9) % 9;
   uint8_t value = buffer[retrieveIndex];
   count--;
+  setInQueueState(value, false);
 
   return value;
+}
+
+/**
+*  Get state of one possible queue element (0 to 8) (used for duplciate check):
+*/
+bool SoilWatering::getInQueueState(int index){
+    if (index < 0 || index > 8) return false;  // Out-of-bounds check
+  
+  return (isInQueue & (1 << index)) != 0;  // Check if the bit is set at the specified index
+}
+
+/**
+*  Set state of one possible queue element (0 to 8) (used for duplciate check):
+*/
+void SoilWatering::setInQueueState(int index, bool value){
+  if (index < 0 || index > 8){ // Out-of-bounds check
+    logUnsignedDebug("Out of bounds value %u catched at duplicate check!", index);
+    return;  
+  }
+
+  if (value) {
+      isInQueue |= (1 << index);  // Set the bit at the specified index
+  } else {
+      isInQueue &= ~(1 << index); // Clear the bit at the specified index
+  }
 }
 
 /** 
@@ -81,7 +118,7 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
     if (currentAvrgIteration == checkNeedsWateringEvery - 1) {
       for (int i = 0; i < 9; i++) {
         if (currentSoilHumidityAvrg[i] < soilMoistureLevels[i]) {
-          logger->d(("Plant at position " + String(i) + " needs watering.").c_str());
+          logIntegerDebug("Plant at position %d needs watering.", i, 0);
           queueAdd(i); // Add plant's position to the watering queue
         }
       }
@@ -95,11 +132,10 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
 void SoilWatering::toggleWatering() {
   uint8_t nextValue = queueGetNext();
   if (nextValue == 10) {
-      logger->i("No more plants to water. Stopping.");
-      // break;  // Exit the loop if no more plants need watering EDIT: Not needed anymore because no while loop anymore
+      //logger->i("No plant to water. Stopping.");
       return;
   }
-  logger->d(("Watering at position " + String(nextValue)).c_str());
+  logUnsignedDebug("Watering at position %u", nextValue);
   moveTo(nextValue);
   openValve();
   delay(wateringDuration);  // Wait for the watering to complete
@@ -121,7 +157,7 @@ void SoilWatering::moveTo(uint8_t arrayPosition) {
     mapPosition(arrayPosition, x, y); // Map the position to the plant grid
   }
 
-  logger->d(("Moving to position (" + String(x) + ", " + String(y) + ").").c_str());
+  logIntegerDebug("Moving to position ( %d, %d).", x, y);
 
   // Define where to move to
   stepperX.moveTo(x);
@@ -137,7 +173,7 @@ void SoilWatering::moveTo(uint8_t arrayPosition) {
     stepperY.run();  // Run the motor to the target position
   }
 
-  logger->d(("Arrived at position (" + String(x) + ", " + String(y) + ").").c_str());
+  logIntegerDebug("Arrived at position (%d, %d).", x, y);
 }
 
 void SoilWatering::mapPosition(int index, uint8_t& x, uint8_t& y) {
@@ -206,4 +242,14 @@ void SoilWatering::demo() {
 // Emergency stop function
 void SoilWatering::forceStop() {
   // TODO: Implement emergency interrupt logic
+}
+
+void SoilWatering::logUnsignedDebug(const char* format, const unsigned value){
+  
+}
+
+void SoilWatering::logIntegerDebug(const char* format, const int value1, const int value2){
+  static char buffer[128];
+  snprintf(buffer, sizeof(buffer), format, value1, value2);
+  //logger->d(buffer);
 }

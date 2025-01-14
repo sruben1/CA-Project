@@ -11,9 +11,9 @@ float* getBME280Data(SimpleLogger& logger) {
 
   bme.read(pres, temp, hum, tempUnit, presUnit);
   static float bme280Data[3] = {pres,temp,hum};
-  //For Debugging:
+  //For debugging:
   char buffer[128];
-  sprintf(buffer, "\nTemp (°C): %.2f \nHumidity (RH): %.2f \nPressure (Pa): %.2f", temp, hum, pres);
+  sprintf(buffer, sizeof(buffer), "\nTemp (°C): %.2f \nHumidity (RH): %.2f \nPressure (Pa): %.2f", temp, hum, pres);
   logger.d(buffer);
   
   return bme280Data;
