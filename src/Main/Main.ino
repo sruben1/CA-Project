@@ -38,15 +38,12 @@ UiMenu uiMenu;
 #define NULL_BUTTON_VALUE 0  // Null value
 #define BTN_DOWN 18
 #define BTN_UP 19
-#define BTN_ENTER 2
-volatile uint8_t nextMenuBtnToHandle = NULL;  // for interrupt logic, TODO
-
-// Special Button:
-#define EMERGENCY_STOP_BUTTON 3
+#define BTN_ENTER 3
+volatile uint8_t nextMenuBtnToHandle = NULL_BUTTON_VALUE;  // for interrupt logic
 
 // Sensors:
 //=========
-long int SENSOR_READ_INTERVAL;  // long value in millis
+unsigned long SENSOR_READ_INTERVAL;  // long value in millis
 // TODO!! :
 #define APPROX_MAIN_LOOP_TIME 2000  // long value in millis
 
@@ -57,6 +54,7 @@ long int SENSOR_READ_INTERVAL;  // long value in millis
 SoilWatering soilWatering;      // Declare general instance to use.
 #define soilNodesRngStart 0     // TODO!! : Make sure these are correct!
 #define needsWateringBelow 511  // TODO : test needed value + do we want individual setting section?
+#define wateringInterval 3 // Time in ?unit
 unsigned int howLongToWater = 0; 
 
 // Temp/Humid/Pressure sensor:
@@ -76,12 +74,12 @@ void setup() {
   //=========
   soilWatering.begin(soilNodesRngStart, needsWateringBelow, &logger);
   Wire.begin();
-
+/*
   while (!bme.begin()) {
     logger.c("Could not find BME280 sensor!");
     delay(1000);
   }
-
+*/
   switch (bme.chipModel()) {
     case BME280::ChipModel_BME280:
       logger.d("Found BME280 sensor! Success.");
@@ -95,7 +93,6 @@ void setup() {
 
   // UI Menu:
   //=========
-  uiMenu.begin(logger, getPreferences(), 14, printLcdText, storePreferences);
   // LCD:
   lcd.begin(16, 2);
   //line1.reserve(17);
@@ -108,11 +105,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(BTN_DOWN), downButtonInterrupt, RISING);
   attachInterrupt(digitalPinToInterrupt(BTN_UP), upButtonInterrupt, RISING);
   attachInterrupt(digitalPinToInterrupt(BTN_ENTER), enterButtonInterrupt, RISING);
-
-  // Emrgencey stop:
-  pinMode(EMERGENCY_STOP_BUTTON, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(EMERGENCY_STOP_BUTTON), emergencyStop, RISING);
-
+  
   //SD Card setup
   if (!SD.begin()) {
     logger.c("SD initialization failed");
@@ -121,9 +114,10 @@ void setup() {
   }
   //try to read preferences from SD Card, they remain standart if no SD-Card is found.
   readPreferences();
-
+  uiMenu.begin(logger, getPreferences(), 14, printLcdText, storePreferences);
   //Read preferences are given to relevant variables
-  long int SENSOR_READ_INTERVAL = preferences[0]*1000;
+  long int SENSOR_READ_INTERVAL = (preferences[0]) * 1000;
+  logger.d(SENSOR_READ_INTERVAL);
 
   logger.d("Setup finished!");
 }
@@ -140,12 +134,15 @@ void loop() {
   if (btnCurrentlyHandled != NULL_BUTTON_VALUE) {
     switch (btnCurrentlyHandled) {
       case BTN_DOWN:
+        logger.i("Down BTN");
         uiMenu.handleButtonDown();
         break;
       case BTN_UP:
+      logger.i("Up BTN");
         uiMenu.handleButtonUp();
         break;
       case BTN_ENTER:
+        logger.i("Enter BTN");
         uiMenu.handleButtonEnter();
         break;
     }
@@ -156,6 +153,7 @@ void loop() {
   unsigned long currentMillis = millis();
   // TODO!: verify timing in regards to logic and program flow:
   if (currentMillis - previousSensorsMillis >= SENSOR_READ_INTERVAL) {
+    logger.d("time to log! :" + (currentMillis));
     previousSensorsMillis = currentMillis;  // Saves current value, so that the time this section ran last, can be checked.
 
     //get values
@@ -165,33 +163,12 @@ void loop() {
     //store everything on SD-Card
     storeData(humidityData,bme280Data);
 
+    soilWatering.toggleWatering();
 
   }
-  /*
-  // Calculate the available time for watering
-  unsigned long availableTime = SENSOR_READ_INTERVAL - (howLongToWater + APPROX_MAIN_LOOP_TIME);
-
-  // Ensure available time is positive
-  if (availableTime <= 0) {
-      availableTime = howLongToWater; // Minimum available time must fit the watering task
-  }
-
-  // Dynamically calculate the fraction to balance the interval
-  float dynamicFraction = (float) howLongToWater / availableTime;
-
-  // Clamp the fraction to a maximum of 1.0
-  if (dynamicFraction > 1.0) {
-      dynamicFraction = 1.0;
-  }
-
-  // Adjust the watering interval using the dynamic fraction
-  unsigned long adjustedWateringInterval = availableTime * dynamicFraction;
-
-  // Perform the conditional check
-  if (currentMillis - previousWateringMillis >= adjustedWateringInterval + APPROX_MAIN_LOOP_TIME) {
-          //Check if plants need watering
+  
+  if (currentMillis - previousWateringMillis >= wateringInterval + APPROX_MAIN_LOOP_TIME) {
     soilWatering.toggleWatering();
     previousWateringMillis = currentMillis;
   }
-  */
 }

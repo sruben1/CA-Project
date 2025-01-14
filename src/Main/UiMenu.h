@@ -7,6 +7,8 @@
 // Total number of menupages:
 #define MENU_PAGE_COUNT 14
 
+#define BUTTON_DEBOUNCE_DELAY 500
+
 class UiMenu {
 private:
   const char* mainPageNames[MENU_PAGE_COUNT] = { "s. read intv.:", "Th. soil node1:", "Th. soil node2:", "Th. soil node3:", "Th. soil node4:",
@@ -16,7 +18,7 @@ private:
   int subPageValue = 0;
   int currLowerLimit = -1;
   int currUpperLimit = 1;
-  const int subPageValuesRange[MENU_PAGE_COUNT*2] = { 15, 3600, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 17, 45, 17, 45, 0, 1, 0, 1 }; // 101, 102 => calculated at runtime
+  const int subPageValuesRange[MENU_PAGE_COUNT*2] = { 15, 3600, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 0, 11, 17, 45, 17, 45, 0, 1, 0, 1 };
   const int subPageStepSize[MENU_PAGE_COUNT] = { 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   const int subPageNameAssignment[MENU_PAGE_COUNT]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1 };                                               // Which naming scheme is used for the subpage variables, selects index of "subPageStandardValueNames"
 
@@ -29,6 +31,7 @@ private:
   int currMenuPage = 0;
 
   SimpleLogger* logger = nullptr;
+
   unsigned int unsignedModulo(int value, unsigned int m);
 
 public:

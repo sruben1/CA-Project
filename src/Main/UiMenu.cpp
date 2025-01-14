@@ -2,45 +2,38 @@
 
 void UiMenu::begin(SimpleLogger& logger, int* prefrences, uint8_t currMenuPageCount, void (*printLcdText)(const String& line1, const String& line2), void (*storePreferences)()) {
   // Store logger reference
-    this->logger = &logger;
-    
-    // Store preferences pointer
-    this->preferences = prefrences;
+  this->logger = &logger;
+  
+  // Store preferences pointer
+  this->preferences = prefrences;
 
-    this->storePreferences = storePreferences;
-    
-    // Store LCD print function pointer
-    this->printLcdText = printLcdText;
-    
-    // Validate menu page count
-    if (currMenuPageCount != MENU_PAGE_COUNT) {
-        logger.w("Error: Menu page count mismatch");
-        return;
-    }
-    
-    // Initialize menu state
-    notInSubMenu = true;
-    currMenuPage = 0;
-    
-    // Initialize sub-menu values
-    subPageValue = 0;
-    
-    // Set initial limits based on first menu item
-    currLowerLimit = subPageValuesRange[0];
-    currUpperLimit = subPageValuesRange[1];
-    
-    // Log initialization
-    logger.i("UI Menu initialized");
-    
-    // Display initial menu page
-    if (printLcdText != nullptr) {
-        String line1 = mainPageNames[currMenuPage];
-        String line2 = String(preferences[currMenuPage]);
-        printLcdText(line1, line2);
-    } else {
-        logger.w("Error: LCD print function is null");
-    }
-                   }
+  this->storePreferences = storePreferences;
+  
+  // Store LCD print function pointer
+  this->printLcdText = printLcdText;
+  
+  // Validate menu page count
+  if (currMenuPageCount != MENU_PAGE_COUNT) {
+      logger.c("Error: Menu page count mismatch");
+      return;
+  }
+  
+  // Initialize menu state
+  notInSubMenu = true;
+  currMenuPage = 0;
+  
+  // Log initialization
+  logger.i("UI Menu initialized");
+  
+  // Display initial menu page
+  if (printLcdText != nullptr) {
+      String line1 = mainPageNames[currMenuPage];
+      String line2 = String(preferences[currMenuPage]);
+      printLcdText(line1, line2);
+  } else {
+      logger.c("Error: LCD print function is null");
+  }
+}
 
 void UiMenu::handleButtonUp(){
   if (notInSubMenu) {
@@ -50,7 +43,7 @@ void UiMenu::handleButtonUp(){
     subPageValue = unsignedModulo(subPageValue - subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]);
     printLcdText(mainPageNames[currMenuPage], String(subPageValue));
   }
-  delay(500);
+  delay(BUTTON_DEBOUNCE_DELAY);
 }
 
 void UiMenu::handleButtonDown(){
@@ -61,7 +54,7 @@ void UiMenu::handleButtonDown(){
     subPageValue = unsignedModulo(subPageValue + subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]);
     printLcdText(mainPageNames[currMenuPage], String(subPageValue));
   }
-  delay(500);
+  delay(BUTTON_DEBOUNCE_DELAY);
 }
 
 void UiMenu::handleButtonEnter() {
@@ -85,7 +78,7 @@ void UiMenu::handleButtonEnter() {
             notInSubMenu = true;
         }
     }
-    delay(500);
+    delay(BUTTON_DEBOUNCE_DELAY);
 }
 
 unsigned UiMenu::unsignedModulo(int value, unsigned int m) {
