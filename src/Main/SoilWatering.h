@@ -7,10 +7,14 @@
 
 class SoilWatering {
 private:
+//Debug logger
+  // Function pointer types for logging
+  typedef void (*LogFunction)(const char*, uint8_t level);
+  
+  // Function pointer variables
+  LogFunction logFn = nullptr;
   // General variables
   int soilNodesRngStart;
-  // int needsWateringBelow;
-  SimpleLogger* logger = nullptr;
   int* soilMoistureLevels;
 
   // Main watering logic variables
@@ -62,6 +66,7 @@ private:
 
   void logUnsignedDebug(const char* format, const unsigned value);
   void logIntegerDebug(const char* format, const int value1, const int value2);
+  void logD(const char* message);
   
 
   public:
@@ -69,7 +74,7 @@ private:
   explicit SoilWatering();
 
   // Public methods
-  void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, SimpleLogger& logger, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4);
+  void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4);
   uint8_t* collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();

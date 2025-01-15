@@ -17,3 +17,23 @@ void logLongUnsigned(const char* message, const unsigned long variable) {
   snprintf(buffer, sizeof(buffer),"%s%lu",  message, variable);
   logger.d(buffer);
 }
+
+void logExportFunction(const char* message, uint8_t level){
+  switch (level){
+    case LOG_LEVEL_CRITICAL:
+      logger.c(message);
+      break;
+    case LOG_LEVEL_WARNING:
+      logger.w(message);
+      break;
+    case LOG_LEVEL_INFO:
+      logger.i(message);
+      break;
+    case LOG_LEVEL_DEBUG:
+      logger.d(message);
+      break;
+    default:
+      logger.d("LOGGER ERROR, non valid level...");
+      break;
+  }
+}

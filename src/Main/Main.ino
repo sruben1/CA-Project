@@ -137,7 +137,7 @@ void setup() {
   }
 
   // Initialize alle values that are important to the watering system. DO NOT CHANGE THE ORDER OF PINS for the steppers
-  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, &logger, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
+  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
   uiMenu.begin(logger, getPreferences(), 14, printLcdText, storePreferences);
   
   logLongUnsigned("Sensor read interval := ", SENSOR_READ_INTERVAL); // (Debug)
@@ -197,6 +197,15 @@ void loop() {
   }
 
   if ((currentMillis - previousWateringMillis) >= waterAPlantEvery) {
+    uiMenu.handleButtonEnter();
+    uiMenu.handleButtonDown();
+    uiMenu.handleButtonUp();
+    uiMenu.handleButtonEnter();
+    uiMenu.handleButtonDown();
+    uiMenu.handleButtonEnter();
+    uiMenu.handleButtonUp();
+    uiMenu.handleButtonUp();
+    uiMenu.handleButtonEnter();
   logLongUnsigned("time to water! :", currentMillis);
 
   soilWatering.toggleWatering();

@@ -5,11 +5,11 @@ SoilWatering::SoilWatering() {
 }
 
 // Sets the constants to be used
-void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, SimpleLogger& logger, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4) {
+void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4) {
   this->soilNodesRngStart = soilNodesRngStart;
   this->soilMoistureLevels = moistureLevels;
   this->wateringDuration = wateringDuration; 
-  this->logger = &logger;
+  this->logFn = log;
 
   this->motorPin1X = motorPinX1;
   this->motorPin2X = motorPinX2;
@@ -35,7 +35,7 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   stepperX.setCurrentPosition(0);
   stepperY.setCurrentPosition(0);
 
-  logger.d("SoilWatering class now is intialized with variabel parameters.");
+  logD("SoilWatering class now is intialized with variabel parameters.");
 }
 
 /**
@@ -132,7 +132,7 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
 void SoilWatering::toggleWatering() {
   uint8_t nextValue = queueGetNext();
   if (nextValue == 10) {
-      //logger->i("No plant to water. Stopping.");
+      logD("No plant to water. Stopping.");
       return;
   }
   logUnsignedDebug("Watering at position %u", nextValue);
@@ -145,7 +145,7 @@ void SoilWatering::toggleWatering() {
 
 void SoilWatering::moveTo(uint8_t arrayPosition) {
   if (arrayPosition > 9) {
-  logger->w("Invalid arrayPosition passed to moveTo.");
+  logFn("Invalid arrayPosition passed to moveTo.", LOG_LEVEL_WARNING);
   return;
 }
   uint8_t x, y;
@@ -157,7 +157,7 @@ void SoilWatering::moveTo(uint8_t arrayPosition) {
     mapPosition(arrayPosition, x, y); // Map the position to the plant grid
   }
 
-  logIntegerDebug("Moving to position ( %d, %d).", x, y);
+  logIntegerDebug("Moving to position (%d, %d).", x, y);
 
   // Define where to move to
   stepperX.moveTo(x);
@@ -196,7 +196,7 @@ void SoilWatering::mapPosition(int index, uint8_t& x, uint8_t& y) {
 
 void SoilWatering::openValve() {
   // TODO: Implemet according to the servo we have. Example implementation:
-  logger->d("Opening valve.");
+  logD("Opening valve.");
   // servo.attach(VALVE_PIN);  // Attach the servo to the valve pin (VALVE_PIN is a predefined constant)
   // servo.write(VALVE_OPEN_ANGLE);  // Move servo to the angle that opens the valve
   // delay(500);  // Small delay to allow the servo to physically move
@@ -204,7 +204,7 @@ void SoilWatering::openValve() {
 
 void SoilWatering::closeValve() {
   // TODO: Implemet according to the servo we have. Example implementation:
-  logger->d("Closing valve.");
+  logD("Closing valve.");
   // servo.write(VALVE_CLOSED_ANGLE);  // Move servo to the angle that closes the valve
   // delay(500);  // Small delay to allow the servo to physically move
   // servo.detach();  // Detach the servo to save power and prevent unwanted movements
@@ -245,11 +245,17 @@ void SoilWatering::forceStop() {
 }
 
 void SoilWatering::logUnsignedDebug(const char* format, const unsigned value){
-  
+  static char buffer[128];
+  snprintf(buffer, sizeof(buffer), format, value);
+  logFn(buffer, LOG_LEVEL_DEBUG);
 }
 
 void SoilWatering::logIntegerDebug(const char* format, const int value1, const int value2){
   static char buffer[128];
   snprintf(buffer, sizeof(buffer), format, value1, value2);
-  //logger->d(buffer);
+  logFn(buffer, LOG_LEVEL_DEBUG);
+}
+
+void SoilWatering::logD(const char* message){
+  logFn(message, LOG_LEVEL_DEBUG);
 }

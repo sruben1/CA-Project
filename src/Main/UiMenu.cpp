@@ -43,6 +43,7 @@ void UiMenu::handleButtonUp(){
     subPageValue = unsignedModulo(subPageValue - subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]);
     printLcdText(mainPageNames[currMenuPage], String(subPageValue));
   }
+  logUnsignedDebug("Handled BUTTON UP, now menu: %u, sub menu: %u", currMenuPage, subPageValue);
   delay(BUTTON_DEBOUNCE_DELAY);
 }
 
@@ -54,25 +55,31 @@ void UiMenu::handleButtonDown(){
     subPageValue = unsignedModulo(subPageValue + subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]);
     printLcdText(mainPageNames[currMenuPage], String(subPageValue));
   }
+  logUnsignedDebug("Handled BUTTON DOWN, now menu: %u, sub menu: %u", currMenuPage, subPageValue);
   delay(BUTTON_DEBOUNCE_DELAY);
 }
 
 void UiMenu::handleButtonEnter() {
+    logUnsignedDebug("Handling ENTER, for menu: %u, sub menu: %u", currMenuPage, subPageValue);
     if (notInSubMenu) {
+      logger->d("ENTER: ENTERING sub menu.");
         printLcdText(mainPageNames[currMenuPage], "Edit: + or -");
         subPageValue = preferences[currMenuPage];
         notInSubMenu = false;
     } else {
-        if (currMenuPage == 13) {  // Changed = to == for comparison
-            if (storePreferences != nullptr) {  // Add null check
+      logger->d("ENTER: EXITING sub menu.");
+        if (currMenuPage == 12 && subPageValue == 1) {
+            if (storePreferences != nullptr) {
+                logger->i("Storing settings due to ENTER action:");
                 storePreferences();
                 printLcdText("To SD:", mainPageNames[currMenuPage]);
             } else {
                 logger->c("Error: storePreferences is null");
             }
-        } else if (currMenuPage == 14) {  // Changed = to == for comparison
+        } else if (currMenuPage == 14) {
             //TODO
         } else {
+            logUnsignedDebug("ENTER: storing to cache sub menu value: %u, for menu: %u", subPageValue, currMenuPage);
             preferences[currMenuPage] = subPageValue;
             printLcdText("Saved:", mainPageNames[currMenuPage]);
             notInSubMenu = true;
@@ -89,3 +96,14 @@ unsigned UiMenu::unsignedModulo(int value, unsigned int m) {
   return mod;
 }
 
+void UiMenu::logUnsignedDebug(const char* format, const unsigned value){
+  static char buffer[128];
+  snprintf(buffer, sizeof(buffer), format, value);
+  logger->d(buffer);
+}
+
+void UiMenu::logUnsignedDebug(const char* format, const unsigned value1, const unsigned value2){
+  static char buffer[128];
+  snprintf(buffer, sizeof(buffer), format, value1, value2);
+  logger->d(buffer);
+}

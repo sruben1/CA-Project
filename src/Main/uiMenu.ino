@@ -23,9 +23,6 @@ void printBusy() {
   lcd.setCursor(0, 1);
   lcd.print("Please wait.");
 }
-#define BTN_DOWN 18
-#define BTN_UP 19
-#define BTN_ENTER 20
 
 void downButtonInterrupt() {
    if(nextMenuBtnToHandle != BTN_ENTER){ // make sure enter case has highest priority
