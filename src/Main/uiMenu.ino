@@ -37,7 +37,3 @@ void upButtonInterrupt() {
 void enterButtonInterrupt() {
     nextMenuBtnToHandle = BTN_ENTER;
 }
-
-void emergencyStop(){
-  soilWatering.forceStop();
-}
