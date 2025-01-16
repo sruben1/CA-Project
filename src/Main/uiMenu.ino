@@ -37,3 +37,7 @@ void upButtonInterrupt() {
 void enterButtonInterrupt() {
     nextMenuBtnToHandle = BTN_ENTER;
 }
+
+void prepSystemToShutDown(){
+  shutDownNextIteration = true;
+}

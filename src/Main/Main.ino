@@ -23,6 +23,7 @@ static int preferences[12] = {30,0,0,0,0,0,0,0,0,0,40,10};
 //=============
 unsigned long previousSensorsMillis = 0;  // will store last time sensors iterrated
 unsigned long previousWateringMillis = 0;  // will store last time watering run iterrated
+bool shutDownNextIteration = false;
 
 // Main Menu:
 //===========
@@ -73,6 +74,7 @@ BME280I2C bme;
 #define motorPinY4 29
 
 void setup() {
+  if()
   // DEBUGGING:
   //===========
   pinMode(LED_BUILTIN, OUTPUT);  //For debugging
@@ -149,6 +151,10 @@ void setup() {
 }
 
 void loop() {
+  // Implementation to safely shut down system:
+  if (shutDownNextIteration){
+    
+  }
   // UI Menu:
   //===========
   // Menu Buttons:
