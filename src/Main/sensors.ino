@@ -1,8 +1,8 @@
-//Temperature + Air Humididty + Air Pressure:
+//Temperature + Air Humididty + Air Pressure and Ventilation:
 //==========================================
 
 /**
-*  Store/Log sensor Data to SD-Card, returns pointer to the first float in an array with size 3
+*  Measure sensor Data, returns pointer to the first float in an array with size 3, containing [Temperature, Humidity, Pressure]
 */
 float* getBME280Data(SimpleLogger& logger) {
   float temp(NAN), hum(NAN), pres(NAN);
@@ -12,9 +12,29 @@ float* getBME280Data(SimpleLogger& logger) {
   bme.read(pres, temp, hum, tempUnit, presUnit);
   static float bme280Data[3] = {pres,temp,hum};
   //For debugging:
-  char buffer[128];
-  sprintf(buffer, sizeof(buffer), "\nTemp (°C): %.2f \nHumidity (RH): %.2f \nPressure (Pa): %.2f", temp, hum, pres);
-  logger.d(buffer);
+  Serial.print("BME measurments: ");
+  Serial.print(pres);
+  Serial.print("Pa, ");
+  Serial.print(temp);
+  Serial.print("C, ");
+  Serial.print(hum);
+  Serial.println("%");
   
   return bme280Data;
+}
+/**
+*   Turns the fan on if measured temperature/humidity exceeds maxAirTemperature/maxAirHumidity. Fan will never turn on if temperature is more than 5 degrees colder than the max value.
+*/
+void ventilationCheck(float* bmeData){
+  //Check that the sensor is working and giving proper data back
+  if(!(isnan(*(bmeData+1)) || isnan(*(bmeData+2)))){
+    //check if values exceed the max
+    if(((*(bmeData+1) > maxAirTemperature) || (*(bmeData+2) > maxAirHumidity)) && (*(bmeData+1) > maxAirTemperature-5)){
+      digitalWrite(FAN,HIGH);
+    }else{
+      digitalWrite(FAN,LOW);
+    }
+  }else {
+    logger.c("Could not read BME280Sensor-Data! Is sensor not connected?");
+  }
 }
