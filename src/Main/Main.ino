@@ -26,12 +26,13 @@ int maxAirHumidity;
 //=============
 unsigned long previousSensorsMillis = 0;  // will store last time sensors iterrated
 unsigned long previousWateringMillis = 0;  // will store last time watering run iterrated
+bool shutDownNextIteration = false;
 
 // Main Menu:
 //===========
 
 // Define Pins used for LCD Display
-LiquidCrystal lcd(4, 5, 14, 15, 16, 17);
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 //Menu:
 UiMenu uiMenu;
@@ -40,7 +41,7 @@ UiMenu uiMenu;
 #define NULL_BUTTON_VALUE 0  // Null value
 #define BTN_DOWN 18
 #define BTN_UP 19
-#define BTN_ENTER 3
+#define BTN_ENTER 2
 volatile uint8_t nextMenuBtnToHandle = NULL_BUTTON_VALUE;  // for interrupt logic
 
 // Sensors:
@@ -52,21 +53,24 @@ unsigned long SENSOR_READ_INTERVAL;  // long value in millis
 
 // Soil Humidity sensors:
 SoilWatering soilWatering;      // Declare general instance to use.
-#define soilNodesRngStart 0     // TODO!! : Make sure these are correct!
+#define soilNodesRngStart 0     
 
-// Soil waering timing
+// Soil watring timing:
 #define howLongToWater 3000 // Time in millis
 #define waterAPlantEvery 15000 // Time in millis
 
 // Temp/Humid/Pressure sensor:
+//default I2C pins on mega are: 20 (SDA) and 21 (SCL)
 BME280I2C bme;
+
 
 // Ventilation:
 //============
 #define FAN 10
 
-// Stepper Pins
-// TODO: Replace with correct pins
+// Stepper motors:
+//================ 
+// Pins: TODO: Replace with correct pins
 #define motorPinX1 22
 #define motorPinX2 24
 #define motorPinX3 26
@@ -78,6 +82,7 @@ BME280I2C bme;
 #define motorPinY4 29
 
 void setup() {
+  if()
   // DEBUGGING:
   //===========
   pinMode(LED_BUILTIN, OUTPUT);  //For debugging
@@ -121,6 +126,7 @@ void setup() {
   //=========
   // LCD:
   lcd.begin(16, 2);
+ 
 
   //Buttons:
   pinMode(BTN_DOWN, INPUT_PULLUP);
@@ -162,9 +168,10 @@ void setup() {
 }
 
 void loop() {
-  //Led blink to get feedback of current program activity:
-   debugLed();
-  
+  // Implementation to safely shut down system:
+  if (shutDownNextIteration){
+    
+  }
   // UI Menu:
   //===========
   // Menu Buttons:
@@ -199,7 +206,7 @@ void loop() {
   if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL) {
 
     logLongUnsigned("time to log!: ", currentMillis);
-    logLongUnsigned("Sensor read interval is: ", SENSOR_READ_INTERVAL);
+    //logLongUnsigned("Sensor read interval is: ", SENSOR_READ_INTERVAL);
     
     //get values
     uint8_t* humidityData = soilWatering.collectSoilHumidityValues();
@@ -212,7 +219,6 @@ void loop() {
   }
 
   if ((currentMillis - previousWateringMillis) >= waterAPlantEvery) {
-
   logLongUnsigned("time to water! :", currentMillis);
 
   soilWatering.toggleWatering();

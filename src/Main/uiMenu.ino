@@ -38,6 +38,6 @@ void enterButtonInterrupt() {
     nextMenuBtnToHandle = BTN_ENTER;
 }
 
-void emergencyStop(){
-  soilWatering.forceStop();
+void prepSystemToShutDown(){
+  shutDownNextIteration = true;
 }
