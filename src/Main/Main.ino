@@ -26,22 +26,26 @@ int maxAirHumidity;
 //=============
 unsigned long previousSensorsMillis = 0;  // will store last time sensors iterrated
 unsigned long previousWateringMillis = 0;  // will store last time watering run iterrated
-bool shutDownNextIteration = false;
+static bool shutDownNextIteration = false;
 
 // Main Menu:
 //===========
 
 // Define Pins used for LCD Display
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+LiquidCrystal lcd(6, 7, 14, 15, 16, 17);
 
-//Menu:
+//User interface handler class:
 UiMenu uiMenu;
+
+//Status LEDs:
+#define LED_GREEN 4
+#define LED_RED 5
 
 // Menu navigation buttons
 #define NULL_BUTTON_VALUE 0  // Null value
 #define BTN_DOWN 18
 #define BTN_UP 19
-#define BTN_ENTER 2
+#define BTN_ENTER 3
 volatile uint8_t nextMenuBtnToHandle = NULL_BUTTON_VALUE;  // for interrupt logic
 
 // Sensors:
@@ -58,6 +62,9 @@ SoilWatering soilWatering;      // Declare general instance to use.
 // Soil watring timing:
 #define howLongToWater 3000 // Time in millis
 #define waterAPlantEvery 15000 // Time in millis
+
+// Servo valve:
+#define SRVO_VALVE_PWM 8 
 
 // Temp/Humid/Pressure sensor:
 //default I2C pins on mega are: 20 (SDA) and 21 (SCL)
@@ -82,7 +89,6 @@ BME280I2C bme;
 #define motorPinY4 29
 
 void setup() {
-  if()
   // DEBUGGING:
   //===========
   pinMode(LED_BUILTIN, OUTPUT);  //For debugging
@@ -104,7 +110,7 @@ void setup() {
   while (!bme.begin()) {
     logger.c("Could not find BME280 sensor!");
     delay(1000);
-    //If Sensor can't be found within 3 iterations, stop looking and continue
+    //If Sensor can't be found within 4 iterations, stop looking and continue
     if(attempts > 3){
       break;
     }
@@ -160,7 +166,7 @@ void setup() {
   pinMode(FAN, OUTPUT);
   // Initialize alle values that are important to the watering system. DO NOT CHANGE THE ORDER OF PINS for the steppers
   soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
-  uiMenu.begin(logger, getPreferences(), 14, printLcdText, storePreferences);
+  uiMenu.begin(logger, getPreferences(), 14, LED_GREEN, LED_RED, printLcdText, storePreferences, &shutDownNextIteration);
   
   logLongUnsigned("Sensor read interval := ", SENSOR_READ_INTERVAL); // (Debug)
 
@@ -170,7 +176,12 @@ void setup() {
 void loop() {
   // Implementation to safely shut down system:
   if (shutDownNextIteration){
-    
+    digitalWrite(LED_RED, LOW);
+    digitalWrite(LED_GREEN, HIGH);
+    printLcdText("Now safe to"," shut down.");
+    while(true){
+      //wait for user to reset or disconnect power.
+    }
   }
   // UI Menu:
   //===========
@@ -221,8 +232,10 @@ void loop() {
   if ((currentMillis - previousWateringMillis) >= waterAPlantEvery) {
   logLongUnsigned("time to water! :", currentMillis);
 
+  printBusy();
   soilWatering.toggleWatering();
-
+  endBusy();
+  
   previousWateringMillis = currentMillis; // Saves current value, so that the time this section ran last, can be checked.
   }
 }

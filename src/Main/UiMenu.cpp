@@ -1,16 +1,22 @@
 #include "UiMenu.h"
 
-void UiMenu::begin(SimpleLogger& logger, int* prefrences, uint8_t currMenuPageCount, void (*printLcdText)(const String& line1, const String& line2), void (*storePreferences)()) {
+void UiMenu::begin(SimpleLogger& logger, int* prefrences, uint8_t currMenuPageCount, uint8_t ledGreen, uint8_t ledRed, void (*printLcdText)(const String& line1, const String& line2), void (*storePreferences)(), bool* shutDownNextIteration) {
   // Store logger reference
   this->logger = &logger;
   
   // Store preferences pointer
   this->preferences = prefrences;
 
+  // Request shut down preparation:
+  this->shutDownNextIteration = shutDownNextIteration;
+
   this->storePreferences = storePreferences;
   
   // Store LCD print function pointer
   this->printLcdText = printLcdText;
+
+  this->ledGreen = ledGreen;
+  this->ledRed = ledRed;
   
   // Validate menu page count
   if (currMenuPageCount != MENU_PAGE_COUNT) {
@@ -70,14 +76,15 @@ void UiMenu::handleButtonEnter() {
       logger->d("ENTER: EXITING sub menu.");
         if (currMenuPage == 12 && subPageValue == 1) {
             if (storePreferences != nullptr) {
-                logger->i("Storing settings due to ENTER action:");
+                logger->i("Storing settings to SD due to ENTER action:");
                 storePreferences();
                 printLcdText("To SD:", mainPageNames[currMenuPage]);
             } else {
                 logger->c("Error: storePreferences is null");
             }
-        } else if (currMenuPage == 14) {
-            //TODO
+        } else if (currMenuPage == 13) {
+            logger->i("Prepping shut down due to ENTER action!");
+            *shutDownNextIteration = true;
         } else {
             logUnsignedDebug("ENTER: storing to cache sub menu value: %u, for menu: %u", subPageValue, currMenuPage);
             preferences[currMenuPage] = subPageValue;
