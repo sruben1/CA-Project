@@ -1,11 +1,14 @@
 #include "SoilWatering.h"
 #include "AccelStepper.h"
+#include <Servo.h>
 
 SoilWatering::SoilWatering() {
 }
 
-// Sets the constants to be used
-void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4) {
+/**
+*  Getting setup variables from main
+*/
+void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPin) {
   this->soilNodesRngStart = soilNodesRngStart;
   this->soilMoistureLevels = moistureLevels;
   this->wateringDuration = wateringDuration; 
@@ -36,6 +39,9 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   stepperY.setCurrentPosition(0);
 
   logD("SoilWatering class now is intialized with variabel parameters.");
+
+  servo.attach(servoPin);
+  servo.write(270);
 }
 
 /**
@@ -128,9 +134,12 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
   return returnValues;
 }
 
-// Toggle watering based on the state
+/**
+*  Logic for XY-Movement and watering
+*/
 void SoilWatering::toggleWatering() {
   uint8_t nextValue = queueGetNext();
+  // TODO: Decide if we want a homing or not -> can be done without limit siwitches as motors are to weak
   if (nextValue == 10) {
       logD("No plant to water. Stopping.");
       return;
@@ -143,12 +152,16 @@ void SoilWatering::toggleWatering() {
   //moveTo(10); Home position of XY-Table EDIT: Removed after iterative approach each cycle
 }
 
+/**
+*  Move the XY-Table to the correct position
+*/
 void SoilWatering::moveTo(uint8_t arrayPosition) {
   if (arrayPosition > 9) {
   logFn("Invalid arrayPosition passed to moveTo.", LOG_LEVEL_WARNING);
   return;
 }
-  uint8_t x, y;
+// TODO: Ask Shura if i can just replace this uint8_t with a long? -> it's needed here as int is to short
+  long x, y;
 
   if (arrayPosition == 10){ // Homing of positions
     x = 0;
@@ -163,20 +176,21 @@ void SoilWatering::moveTo(uint8_t arrayPosition) {
   stepperX.moveTo(x);
   stepperY.moveTo(y);
 
-  // Move in x direction
-  while (stepperX.distanceToGo() != 0) {
+  // Move in x and y direction
+  while (stepperX.distanceToGo() != 0 || stepperY.distanceToGo() != 0) {
     stepperX.run();  // Run the motor to the target position
+    stepperY.run();
   }
-
-  // Move in y direction
-  while (stepperY.distanceToGo() != 0) {
-    stepperY.run();  // Run the motor to the target position
-  }
+  stepperX.stop();
+  stepperY.stop();
 
   logIntegerDebug("Arrived at position (%d, %d).", x, y);
 }
 
-void SoilWatering::mapPosition(int index, uint8_t& x, uint8_t& y) {
+/**
+*  Translate the array position to a 2D-Coordinate
+*/
+void SoilWatering::mapPosition(int index, long& x, long& y) {
   // TODO think of a good way to map index to motor position
   // Could be like this
   /*
@@ -190,24 +204,26 @@ void SoilWatering::mapPosition(int index, uint8_t& x, uint8_t& y) {
   y = index % gridWidth;  // Determine the column
 
   // Add multiplier and offset from 0 0
-  x = x*2048 + 2048; // Ex: x=0 -> xPos 2048, x = 1 -> xPos 4096
-  y = y*2048 + 2049;
+  x = x*15000 + 4000; // Ex: x=0 -> xPos 4000, x = 1 -> xPos 19000
+  y = y*15000 + 4000;
 }
 
+/**
+*  Opening of the valve
+*/
 void SoilWatering::openValve() {
-  // TODO: Implemet according to the servo we have. Example implementation:
   logD("Opening valve.");
-  // servo.attach(VALVE_PIN);  // Attach the servo to the valve pin (VALVE_PIN is a predefined constant)
-  // servo.write(VALVE_OPEN_ANGLE);  // Move servo to the angle that opens the valve
-  // delay(500);  // Small delay to allow the servo to physically move
+  servo.write(0);
+  delay(250);
 }
 
+/**
+*  Closing of the valve
+*/
 void SoilWatering::closeValve() {
-  // TODO: Implemet according to the servo we have. Example implementation:
   logD("Closing valve.");
-  // servo.write(VALVE_CLOSED_ANGLE);  // Move servo to the angle that closes the valve
-  // delay(500);  // Small delay to allow the servo to physically move
-  // servo.detach();  // Detach the servo to save power and prevent unwanted movements
+  servo.write(270);
+  delay(250);
 }
 
 // Logic to home steppers example:
@@ -242,6 +258,8 @@ void SoilWatering::demo() {
 // Emergency stop function
 void SoilWatering::forceStop() {
   // TODO: Implement emergency interrupt logic
+  stepperX.stop();
+  stepperY.stop();
 }
 
 void SoilWatering::logUnsignedDebug(const char* format, const unsigned value){

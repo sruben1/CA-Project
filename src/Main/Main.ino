@@ -81,8 +81,10 @@ BME280I2C bme;
 #define motorPinY3 27
 #define motorPinY4 29
 
+// Servo:
+#define servoPin 30
+
 void setup() {
-  if()
   // DEBUGGING:
   //===========
   pinMode(LED_BUILTIN, OUTPUT);  //For debugging
@@ -159,7 +161,7 @@ void setup() {
   //Initialize Control Pin for Fan
   pinMode(FAN, OUTPUT);
   // Initialize alle values that are important to the watering system. DO NOT CHANGE THE ORDER OF PINS for the steppers
-  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4);
+  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4, servoPin);
   uiMenu.begin(logger, getPreferences(), 14, printLcdText, storePreferences);
   
   logLongUnsigned("Sensor read interval := ", SENSOR_READ_INTERVAL); // (Debug)

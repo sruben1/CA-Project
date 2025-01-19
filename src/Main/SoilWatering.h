@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <SimpleLogger.h>
 #include <AccelStepper.h>
+#include <Servo.h>
 
 class SoilWatering {
 private:
@@ -35,6 +36,8 @@ private:
   AccelStepper stepperX;
   AccelStepper stepperY;
 
+  Servo servo;
+
   int motorPin1X;
   int motorPin2X;
   int motorPin3X;
@@ -62,7 +65,7 @@ private:
 
   // Stepper functions
   void moveTo(uint8_t arrayPosition);
-  void mapPosition(int index, uint8_t& x, uint8_t& y);
+  void mapPosition(int index, long& x, long& y);
 
   void logUnsignedDebug(const char* format, const unsigned value);
   void logIntegerDebug(const char* format, const int value1, const int value2);
@@ -74,7 +77,7 @@ private:
   explicit SoilWatering();
 
   // Public methods
-  void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4);
+  void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPin);
   uint8_t* collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();
