@@ -12,7 +12,7 @@
 class UiMenu {
 public:
   // Method to pass variables:
-  void begin(SimpleLogger& logger, int* prefrences, uint8_t menuPageCount, void (*printLcdText)(const String& line1, const String& line2), void (*storePreferences)());
+  void begin(SimpleLogger& logger, int* prefrences, uint8_t menuPageCount, uint8_t ledGreen, uint8_t ledRed , void (*printLcdText)(const String& line1, const String& line2), void (*storePreferences)(), bool* shutDownNextIteration);
   // User Input handling:
   void handleButtonUp();
   void handleButtonDown();
@@ -43,10 +43,19 @@ private:
   // External class to set the LCD content:
   void (*printLcdText)(const String& line1, const String& line2);
 
+  // Status LEDs:
+  uint8_t ledGreen;
+  uint8_t ledRed;
+
+// Request shut down flag:
+  bool* shutDownNextIteration;
+
+  // Debugging toools:
   SimpleLogger* logger = nullptr;
   void logUnsignedDebug(const char* format, const unsigned value);
   void logUnsignedDebug(const char* format, const unsigned value1, const unsigned value2);
 
+  // Custom utility:
   unsigned int unsignedModulo(int value, unsigned int m);
 
 };
