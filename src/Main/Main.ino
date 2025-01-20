@@ -89,8 +89,8 @@ BME280I2C bme;
 #define motorPinY4 29
 
 // Home switches
-#define HOME_SWITCH_PIN_X
-#define HOME_SWITCH_PIN_Y
+#define HOME_SWITCH_PIN_X 31
+#define HOME_SWITCH_PIN_Y 30
 
 void setup() {
   // DEBUGGING:
@@ -169,7 +169,7 @@ void setup() {
   //Initialize Control Pin for Fan
   pinMode(FAN, OUTPUT);
   // Initialize alle values that are important to the watering system. DO NOT CHANGE THE ORDER OF PINS for the steppers
-  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4, SRVO_VALVE_PWM);
+  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4, SRVO_VALVE_PWM, HOME_SWITCH_PIN_X, HOME_SWITCH_PIN_Y);
  uiMenu.begin(logger, getPreferences(), 14, LED_GREEN, LED_RED, printLcdText, storePreferences, &shutDownNextIteration);
   
   logLongUnsigned("Sensor read interval := ", SENSOR_READ_INTERVAL); // (Debug)

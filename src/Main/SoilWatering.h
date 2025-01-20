@@ -85,6 +85,7 @@ private:
   void toggleWatering();
   void forceStop();
   void demo();
+  void homeStepper();
 };
 
 #endif  // SOILWATERING_H

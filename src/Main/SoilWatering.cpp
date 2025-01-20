@@ -260,29 +260,35 @@ void SoilWatering::closeValve() {
 }
 
 // Logic to home steppers example:
-/*
 void SoilWatering::homeStepper() {
   stepperX.setSpeed(-200);  // Move in the direction towards the home switch
+  stepperY.setSpeed(-200);
 
   // Move the stepper until the limit switch is triggered
-  while (digitalRead(HOME_SWITCH_PIN) == HIGH) {
-    stepperX.runSpeed();  // Run the motor at the set speed
+  while (digitalRead(HOME_SWITCH_PIN_X) == HIGH) {
+    stepperX.runSpeed();
   }
-
-  // Stop the motor
   stepperX.stop();
-  delay(100);  // Allow the motor to stop completely
-
-  // Move slightly away from the switch to clear it
-  stepperX.move(100);
-  while (stepperX.isRunning()) {
+  stepperX.setCurrentPosition(0);
+  stepperX.moveTo(100);
+  stepperX.setCurrentPosition(0);
+  while (stepperX.distanceToGo() != 0) {
     stepperX.run();
   }
+  delay(100);
 
-  // Set the current position to 0
-  stepperX.setCurrentPosition(0);
+  while (digitalRead(HOME_SWITCH_PIN_Y) == HIGH) {
+    stepperY.runSpeed();
+  }
+  stepperY.stop();
+  stepperY.setCurrentPosition(0);
+  stepperY.moveTo(100);
+  while (stepperY.distanceToGo() != 0) {
+    stepperY.run();
+  }
+  stepperY.setCurrentPosition(0);
+  delay(100);
 }
-*/
 
 void SoilWatering::demo() {
 
