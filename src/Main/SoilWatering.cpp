@@ -23,6 +23,9 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   this->motorPin3Y = motorPinY3;
   this->motorPin4Y = motorPinY4;
 
+  this->HOME_SWITCH_PIN_X = HOME_SWITCH_PIN_X;
+  this->HOME_SWITCH_PIN_Y = HOME_SWITCH_PIN_Y;
+
   // Initialize with pin sequence IN1-IN3-IN2-IN4! Please do not change! (Or ask Luis)
   stepperX = AccelStepper(MotorInterfaceType, motorPin1X, motorPin3X, motorPin2X, motorPin4X);
   stepperY = AccelStepper(MotorInterfaceType, motorPin1Y, motorPin3Y, motorPin2Y, motorPin4Y);
@@ -261,12 +264,17 @@ void SoilWatering::closeValve() {
 
 // Logic to home steppers example:
 void SoilWatering::homeStepper() {
-  stepperX.setSpeed(-200);  // Move in the direction towards the home switch
-  stepperY.setSpeed(-200);
+  logD("Starting homing");
+  logUnsignedDebug("Switch X: %d", digitalRead(HOME_SWITCH_PIN_X) == LOW);
+  logUnsignedDebug("Switch Y: %d", digitalRead(HOME_SWITCH_PIN_Y) == LOW);
+  stepperX.setSpeed(-500);  // Move in the direction towards the home switch
+  stepperY.setSpeed(-500);
 
   // Move the stepper until the limit switch is triggered
-  while (digitalRead(HOME_SWITCH_PIN_X) == HIGH) {
+  logD("Homing X");
+  while (digitalRead(HOME_SWITCH_PIN_X) == LOW) {
     stepperX.runSpeed();
+    logD("Moving X");
   }
   stepperX.stop();
   stepperX.setCurrentPosition(0);
@@ -277,9 +285,13 @@ void SoilWatering::homeStepper() {
   }
   delay(100);
 
-  while (digitalRead(HOME_SWITCH_PIN_Y) == HIGH) {
+  logD("Homing Y");
+  /*
+  while (digitalRead(HOME_SWITCH_PIN_Y) == LOW) {
     stepperY.runSpeed();
+    logD("Moving Y");
   }
+  */
   stepperY.stop();
   stepperY.setCurrentPosition(0);
   stepperY.moveTo(100);
@@ -288,6 +300,11 @@ void SoilWatering::homeStepper() {
   }
   stepperY.setCurrentPosition(0);
   delay(100);
+  logD("Finished Homing");
+
+
+  stepperX.setSpeed(maxSpeed);
+  stepperY.setSpeed(maxSpeed);
 }
 
 void SoilWatering::demo() {
