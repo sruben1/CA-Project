@@ -48,9 +48,12 @@ private:
   int motorPin3Y;
   int motorPin4Y;
 
+  int HOME_SWITCH_PIN_X;
+  int HOME_SWITCH_PIN_Y;
+
   #define MotorInterfaceType 8 //4 wire motor in half step mode
 
-  #define maxSpeed 650 // Maximum allowed steps per second
+  #define maxSpeed 1000 // Maximum allowed steps per second
   #define acceleration 250
 
   // Private queue functions
@@ -77,7 +80,7 @@ private:
   explicit SoilWatering();
 
   // Public methods
-  void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPin);
+  void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPinint, int HOME_SWITCH_PIN_X, int HOME_SWITCH_PIN_Y);
   uint8_t* collectSoilHumidityValues();
   void toggleWatering();
   void forceStop();

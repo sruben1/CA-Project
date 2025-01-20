@@ -8,7 +8,7 @@ SoilWatering::SoilWatering() {
 /**
 *  Getting setup variables from main
 */
-void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPin) {
+void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPin, int HOME_SWITCH_PIN_X, int HOME_SWITCH_PIN_Y) {
   this->soilNodesRngStart = soilNodesRngStart;
   this->soilMoistureLevels = moistureLevels;
   this->wateringDuration = wateringDuration; 
@@ -41,7 +41,7 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   logD("SoilWatering class now is intialized with variabel parameters.");
 
   servo.attach(servoPin);
-  servo.write(270);
+  servo.write(88);
 }
 
 /**
@@ -119,6 +119,7 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
   } else {
     for (int i = 0; i < 9; i++) {
       returnValues[i] = analogRead(soilNodesRngStart + i);
+      logIntegerDebug("Sensor %d value %d", i, returnValues[i]);
       currentSoilHumidityAvrg[i] = (currentSoilHumidityAvrg[i] + returnValues[i]) / 2;
     }
     if (currentAvrgIteration == checkNeedsWateringEvery - 1) {
@@ -191,14 +192,45 @@ void SoilWatering::moveTo(uint8_t arrayPosition) {
 *  Translate the array position to a 2D-Coordinate
 */
 void SoilWatering::mapPosition(int index, long& x, long& y) {
-  // TODO think of a good way to map index to motor position
-  // Could be like this
-  /*
+  // Warning: Array index is 0 indexed but plant position 1 indexed
   if (index == 0){
-    x = 0;
-    y = 0;
+    x = 4000;
+    y = 4000;
   }
-  */
+  if (index == 1){
+    x = 4000;
+    y = 19000;
+  }
+  if (index == 2){
+    x = 4000;
+    y = 34000;
+  }
+  if (index == 3){
+    x = 19000;
+    y = 4000;
+  }
+  if (index == 4){
+    x = 19000;
+    y = 19000;
+  }
+  if (index == 5){
+    x = 19000;
+    y = 34000;
+  }
+  if (index == 6){
+    x = 34000;
+    y = 4000;
+  }
+  if (index == 7){
+    x = 34000;
+    y = 19000;
+  }
+  if (index == 8){
+    x = 34000;
+    y = 34000;
+  }
+
+  /*
   // Or linear mapping like
   x = index / gridWidth;     // Determine the row
   y = index % gridWidth;  // Determine the column
@@ -206,6 +238,7 @@ void SoilWatering::mapPosition(int index, long& x, long& y) {
   // Add multiplier and offset from 0 0
   x = x*15000 + 4000; // Ex: x=0 -> xPos 4000, x = 1 -> xPos 19000
   y = y*15000 + 4000;
+  */
 }
 
 /**
@@ -222,7 +255,7 @@ void SoilWatering::openValve() {
 */
 void SoilWatering::closeValve() {
   logD("Closing valve.");
-  servo.write(270);
+  servo.write(88);
   delay(250);
 }
 

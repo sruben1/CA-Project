@@ -88,8 +88,9 @@ BME280I2C bme;
 #define motorPinY3 27
 #define motorPinY4 29
 
-// Servo:
-#define servoPin 30
+// Home switches
+#define HOME_SWITCH_PIN_X
+#define HOME_SWITCH_PIN_Y
 
 void setup() {
   // DEBUGGING:
@@ -168,7 +169,7 @@ void setup() {
   //Initialize Control Pin for Fan
   pinMode(FAN, OUTPUT);
   // Initialize alle values that are important to the watering system. DO NOT CHANGE THE ORDER OF PINS for the steppers
-  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4, servoPin);
+  soilWatering.begin(soilNodesRngStart, frozenSoilThreasholdPreferences, howLongToWater, logExportFunction, motorPinX1, motorPinX3, motorPinX2, motorPinX4, motorPinY1, motorPinY3, motorPinY2, motorPinY4, SRVO_VALVE_PWM);
  uiMenu.begin(logger, getPreferences(), 14, LED_GREEN, LED_RED, printLcdText, storePreferences, &shutDownNextIteration);
   
   logLongUnsigned("Sensor read interval := ", SENSOR_READ_INTERVAL); // (Debug)
@@ -217,7 +218,7 @@ void loop() {
   /*char buffer[64];
   sprintf(buffer, "Sens bool: %lu ; delta: %lu", (currentMillis - previousSensorsMillis) > SENSOR_READ_INTERVAL, currentMillis - previousSensorsMillis);
   logger.d(buffer);*/ // Used to debug timing
-  if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL) {
+  if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL /3) {
 
     logLongUnsigned("time to log!: ", currentMillis);
     //logLongUnsigned("Sensor read interval is: ", SENSOR_READ_INTERVAL);
