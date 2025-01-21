@@ -8,7 +8,7 @@ SoilWatering::SoilWatering() {
 /**
 *  Getting setup variables from main
 */
-void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPin) {
+void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int wateringDuration, LogFunction log, int motorPinX1, int motorPinX3, int motorPinX2, int motorPinX4, int motorPinY1, int motorPinY3, int motorPinY2, int motorPinY4, int servoPin, int HOME_SWITCH_PIN_X, int HOME_SWITCH_PIN_Y) {
   this->soilNodesRngStart = soilNodesRngStart;
   this->soilMoistureLevels = moistureLevels;
   this->wateringDuration = wateringDuration; 
@@ -22,6 +22,9 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   this->motorPin2Y = motorPinY2;
   this->motorPin3Y = motorPinY3;
   this->motorPin4Y = motorPinY4;
+
+  this->HOME_SWITCH_PIN_X = HOME_SWITCH_PIN_X;
+  this->HOME_SWITCH_PIN_Y = HOME_SWITCH_PIN_Y;
 
   // Initialize with pin sequence IN1-IN3-IN2-IN4! Please do not change! (Or ask Luis)
   stepperX = AccelStepper(MotorInterfaceType, motorPin1X, motorPin3X, motorPin2X, motorPin4X);
@@ -41,7 +44,7 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   logD("SoilWatering class now is intialized with variabel parameters.");
 
   servo.attach(servoPin);
-  servo.write(270);
+  servo.write(88);
 }
 
 /**
@@ -119,6 +122,7 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
   } else {
     for (int i = 0; i < 9; i++) {
       returnValues[i] = analogRead(soilNodesRngStart + i);
+      logIntegerDebug("Sensor %d value %d", i, returnValues[i]);
       currentSoilHumidityAvrg[i] = (currentSoilHumidityAvrg[i] + returnValues[i]) / 2;
     }
     if (currentAvrgIteration == checkNeedsWateringEvery - 1) {
@@ -191,14 +195,45 @@ void SoilWatering::moveTo(uint8_t arrayPosition) {
 *  Translate the array position to a 2D-Coordinate
 */
 void SoilWatering::mapPosition(int index, long& x, long& y) {
-  // TODO think of a good way to map index to motor position
-  // Could be like this
-  /*
+  // Warning: Array index is 0 indexed but plant position 1 indexed
   if (index == 0){
-    x = 0;
-    y = 0;
+    x = 4000;
+    y = 4000;
   }
-  */
+  if (index == 1){
+    x = 4000;
+    y = 19000;
+  }
+  if (index == 2){
+    x = 4000;
+    y = 34000;
+  }
+  if (index == 3){
+    x = 19000;
+    y = 4000;
+  }
+  if (index == 4){
+    x = 19000;
+    y = 19000;
+  }
+  if (index == 5){
+    x = 19000;
+    y = 34000;
+  }
+  if (index == 6){
+    x = 34000;
+    y = 4000;
+  }
+  if (index == 7){
+    x = 34000;
+    y = 19000;
+  }
+  if (index == 8){
+    x = 34000;
+    y = 34000;
+  }
+
+  /*
   // Or linear mapping like
   x = index / gridWidth;     // Determine the row
   y = index % gridWidth;  // Determine the column
@@ -206,6 +241,7 @@ void SoilWatering::mapPosition(int index, long& x, long& y) {
   // Add multiplier and offset from 0 0
   x = x*15000 + 4000; // Ex: x=0 -> xPos 4000, x = 1 -> xPos 19000
   y = y*15000 + 4000;
+  */
 }
 
 /**
@@ -222,34 +258,54 @@ void SoilWatering::openValve() {
 */
 void SoilWatering::closeValve() {
   logD("Closing valve.");
-  servo.write(270);
+  servo.write(88);
   delay(250);
 }
 
 // Logic to home steppers example:
-/*
 void SoilWatering::homeStepper() {
-  stepperX.setSpeed(-200);  // Move in the direction towards the home switch
+  logD("Starting homing");
+  logUnsignedDebug("Switch X: %d", digitalRead(HOME_SWITCH_PIN_X) == LOW);
+  logUnsignedDebug("Switch Y: %d", digitalRead(HOME_SWITCH_PIN_Y) == LOW);
+  stepperX.setSpeed(-500);  // Move in the direction towards the home switch
+  stepperY.setSpeed(-500);
 
   // Move the stepper until the limit switch is triggered
-  while (digitalRead(HOME_SWITCH_PIN) == HIGH) {
-    stepperX.runSpeed();  // Run the motor at the set speed
+  logD("Homing X");
+  while (digitalRead(HOME_SWITCH_PIN_X) == LOW) {
+    stepperX.runSpeed();
+    logD("Moving X");
   }
-
-  // Stop the motor
   stepperX.stop();
-  delay(100);  // Allow the motor to stop completely
-
-  // Move slightly away from the switch to clear it
-  stepperX.move(100);
-  while (stepperX.isRunning()) {
+  stepperX.setCurrentPosition(0);
+  stepperX.moveTo(100);
+  stepperX.setCurrentPosition(0);
+  while (stepperX.distanceToGo() != 0) {
     stepperX.run();
   }
+  delay(100);
 
-  // Set the current position to 0
-  stepperX.setCurrentPosition(0);
+  logD("Homing Y");
+  /*
+  while (digitalRead(HOME_SWITCH_PIN_Y) == LOW) {
+    stepperY.runSpeed();
+    logD("Moving Y");
+  }
+  */
+  stepperY.stop();
+  stepperY.setCurrentPosition(0);
+  stepperY.moveTo(100);
+  while (stepperY.distanceToGo() != 0) {
+    stepperY.run();
+  }
+  stepperY.setCurrentPosition(0);
+  delay(100);
+  logD("Finished Homing");
+
+
+  stepperX.setSpeed(maxSpeed);
+  stepperY.setSpeed(maxSpeed);
 }
-*/
 
 void SoilWatering::demo() {
 
