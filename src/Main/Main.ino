@@ -17,7 +17,7 @@ SimpleLogger logger(LOG_LEVEL_DEBUG);
 //Preferences:
 //=============
 //set standart preferences: {Sensor Interval: 30, min Soil-Humidity per pot (1 to 9): 0-11, min air temp: 40, min air humidity: 10}
-static int preferences[12] = {30,2,2,2,2,2,2,2,2,2,40,10};
+static int preferences[12] = {30,2,2,2,2,2,2,2,2,2,40,75};
 //Insert all the water values here as well
 int maxAirTemperature;
 int maxAirHumidity;
@@ -60,7 +60,7 @@ SoilWatering soilWatering;      // Declare general instance to use.
 #define soilNodesRngStart 0     
 
 // Soil watring timing:
-#define howLongToWater 3000 // Time in millis
+#define howLongToWater 500 // Time in millis
 #define waterAPlantEvery 15000 // Time in millis
 
 // Servo valve:
@@ -184,6 +184,8 @@ void setup() {
 }
 
 void loop() {
+  //Make led blink to monitor and debug system status:
+  debugLed();
   // Implementation to safely shut down system:
   if (shutDownNextIteration){
     digitalWrite(LED_RED, LOW);
@@ -224,10 +226,10 @@ void loop() {
   /*char buffer[64];
   sprintf(buffer, "Sens bool: %lu ; delta: %lu", (currentMillis - previousSensorsMillis) > SENSOR_READ_INTERVAL, currentMillis - previousSensorsMillis);
   logger.d(buffer);*/ // Used to debug timing
-  if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL) {
+  if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL /5) {
 
     logLongUnsigned("time to log!: ", currentMillis);
-    //logLongUnsigned("Sensor read interval is: ", SENSOR_READ_INTERVAL);
+    logLongUnsigned("Sensor read interval is: ", SENSOR_READ_INTERVAL);
     
     //get values
     uint8_t* humidityData = soilWatering.collectSoilHumidityValues();

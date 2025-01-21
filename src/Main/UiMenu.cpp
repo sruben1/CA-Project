@@ -46,7 +46,7 @@ void UiMenu::handleButtonUp(){
     currMenuPage = unsignedModulo(currMenuPage + 1, MENU_PAGE_COUNT);
     printLcdText(mainPageNames[currMenuPage], "");
   } else {
-    subPageValue = unsignedModulo(subPageValue - subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]);
+    subPageValue = unsignedModulo(subPageValue + subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]+1 );
     printLcdText(mainPageNames[currMenuPage], String(subPageValue));
   }
   logUnsignedDebug("Handled BUTTON UP, now menu: %u, sub menu: %u", currMenuPage, subPageValue);
@@ -58,7 +58,7 @@ void UiMenu::handleButtonDown(){
     currMenuPage = unsignedModulo(currMenuPage - 1, MENU_PAGE_COUNT);
     printLcdText(mainPageNames[currMenuPage], "");
   } else {
-    subPageValue = unsignedModulo(subPageValue + subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]);
+    subPageValue = unsignedModulo(subPageValue - subPageStepSize[currMenuPage], subPageValuesRange[currMenuPage*2+1]+1);
     printLcdText(mainPageNames[currMenuPage], String(subPageValue));
   }
   logUnsignedDebug("Handled BUTTON DOWN, now menu: %u, sub menu: %u", currMenuPage, subPageValue);
@@ -74,23 +74,32 @@ void UiMenu::handleButtonEnter() {
         notInSubMenu = false;
     } else {
       logger->d("ENTER: EXITING sub menu.");
-        if (currMenuPage == 12 && subPageValue == 1) {
+        if (currMenuPage == 12) {
+          if(subPageValue == 1){
             if (storePreferences != nullptr) {
                 logger->i("Storing settings to SD due to ENTER action:");
                 storePreferences();
-                printLcdText("To SD:", mainPageNames[currMenuPage]);
+                printLcdText("Stored all", "to SD.");
             } else {
                 logger->c("Error: storePreferences is null");
             }
+          } else{
+             printLcdText("Storing to SD", "canceled.");
+          }
         } else if (currMenuPage == 13) {
+          if(subPageValue == 1){
             logger->i("Prepping shut down due to ENTER action!");
             *shutDownNextIteration = true;
+          } else{
+             printLcdText("Prep shut down", "canceled.");
+          }
+
         } else {
             logUnsignedDebug("ENTER: storing to cache sub menu value: %u, for menu: %u", subPageValue, currMenuPage);
             preferences[currMenuPage] = subPageValue;
             printLcdText("Saved:", mainPageNames[currMenuPage]);
-            notInSubMenu = true;
         }
+        notInSubMenu = true;
     }
     delay(BUTTON_DEBOUNCE_DELAY);
 }

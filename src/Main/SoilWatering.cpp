@@ -46,7 +46,9 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   logD("SoilWatering class now is intialized with variabel parameters.");
 
   servo.attach(servoPin);
-  servo.write(85);
+  delay(100);
+  servo.write(CLOSED_ANGLE);
+  delay(100);
   servo.detach();
 }
 
@@ -264,7 +266,7 @@ void SoilWatering::openValve() {
 */
 void SoilWatering::closeValve() {
   logD("Closing valve.");
-  servo.write(83);
+  servo.write(CLOSED_ANGLE);
   delay(250);
   servo.detach();
 }
@@ -339,9 +341,12 @@ void SoilWatering::demo() {
 
 // Emergency stop function
 void SoilWatering::forceStop() {
-  // TODO: Implement emergency interrupt logic
-  stepperX.stop();
-  stepperY.stop();
+  openValve();
+  delay(500);
+  closeValve();
+  // (Not Implement emergency interrupt logic since not essential)
+  //stepperX.stop();
+  //stepperY.stop();
 }
 
 void SoilWatering::logUnsignedDebug(const char* format, const unsigned value){

@@ -21,7 +21,7 @@ private:
   // Main watering logic variables
   int currentSoilHumidityAvrg[9] = { 0 };
   uint8_t currentAvrgIteration = 0;
-  const int checkNeedsWateringEvery = 5;
+  const int checkNeedsWateringEvery = 3;
   // bool isCurrentlyWatering = false;
   int wateringDuration = 3000; // How log water should flow for 
   #define gridWidth 3 // 3x3 grid to calculate positions of plant
@@ -38,6 +38,8 @@ private:
 
   int servoPin;
   Servo servo;
+  #define CLOSED_ANGLE 105
+
 
   int motorPin1X;
   int motorPin2X;
