@@ -53,7 +53,7 @@ private:
 
   #define MotorInterfaceType 8 //4 wire motor in half step mode
 
-  #define maxSpeed 1000 // Maximum allowed steps per second
+  #define maxSpeed 1500 // Maximum allowed steps per second
   #define acceleration 250
 
   // Private queue functions
