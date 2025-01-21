@@ -89,8 +89,8 @@ BME280I2C bme;
 #define motorPinY4 29
 
 // Home switches
-#define HOME_SWITCH_PIN_X 11
-#define HOME_SWITCH_PIN_Y 12
+#define HOME_SWITCH_PIN_X 12
+#define HOME_SWITCH_PIN_Y 11
 
 void setup() {
   // DEBUGGING:

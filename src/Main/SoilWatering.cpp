@@ -44,7 +44,7 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   logD("SoilWatering class now is intialized with variabel parameters.");
 
   servo.attach(servoPin);
-  servo.write(88);
+  servo.write(85);
 }
 
 /**
@@ -197,40 +197,40 @@ void SoilWatering::moveTo(uint8_t arrayPosition) {
 void SoilWatering::mapPosition(int index, long& x, long& y) {
   // Warning: Array index is 0 indexed but plant position 1 indexed
   if (index == 0){
-    x = 4000;
+    x = -4000;
     y = 4000;
   }
   if (index == 1){
-    x = 4000;
-    y = 19000;
+    x = -4000;
+    y = 16000;
   }
   if (index == 2){
-    x = 4000;
-    y = 34000;
+    x = -4000;
+    y = 30000;
   }
   if (index == 3){
-    x = 19000;
+    x = -19000;
     y = 4000;
   }
   if (index == 4){
-    x = 19000;
-    y = 19000;
+    x = -19000;
+    y = 16000;
   }
   if (index == 5){
-    x = 19000;
-    y = 34000;
+    x = -19000;
+    y = 30000;
   }
   if (index == 6){
-    x = 34000;
+    x = -34000;
     y = 4000;
   }
   if (index == 7){
-    x = 34000;
-    y = 19000;
+    x = -34000;
+    y = 16000;
   }
   if (index == 8){
-    x = 34000;
-    y = 34000;
+    x = -34000;
+    y = 30000;
   }
 
   /*
@@ -248,18 +248,22 @@ void SoilWatering::mapPosition(int index, long& x, long& y) {
 *  Opening of the valve
 */
 void SoilWatering::openValve() {
+  servo.attach(servoPin);
   logD("Opening valve.");
   servo.write(0);
   delay(250);
+  serve.detach();
 }
 
 /**
 *  Closing of the valve
 */
 void SoilWatering::closeValve() {
+  servo.attach(servoPin);
   logD("Closing valve.");
-  servo.write(88);
+  servo.write(85);
   delay(250);
+  servo.detach();
 }
 
 // Logic to home steppers example:
@@ -267,38 +271,57 @@ void SoilWatering::homeStepper() {
   logD("Starting homing");
   logUnsignedDebug("Switch X: %d", digitalRead(HOME_SWITCH_PIN_X) == LOW);
   logUnsignedDebug("Switch Y: %d", digitalRead(HOME_SWITCH_PIN_Y) == LOW);
-  stepperX.setSpeed(-500);  // Move in the direction towards the home switch
-  stepperY.setSpeed(-500);
+  stepperX.setSpeed(1000);  // Move in the direction towards the home switch
+  stepperY.setSpeed(-1000);
+
+/*
+  while((digitalRead(HOME_SWITCH_PIN_Y) == LOW) && (digitalRead(HOME_SWITCH_PIN_X) == LOW)){
+      stepperX.run();
+      stepperY.run();
+  }
+  while ((digitalRead(HOME_SWITCH_PIN_Y) == LOW)){
+      logD("Moving Y");
+      stepperY.run();
+  }
+  while ((digitalRead(HOME_SWITCH_PIN_X) == LOW)){
+      logD("Moving X");
+      stepperX.run();
+  }
+  stepperY.setCurrentPosition(0);
+  stepperX.setCurrentPosition(0);
+  stepperX.moveTo(-200);
+  stepperY.moveTo(200);
+  stepperY.setCurrentPosition(0);
+  stepperX.setCurrentPosition(0);
+*/
 
   // Move the stepper until the limit switch is triggered
-  logD("Homing X");
-  while (digitalRead(HOME_SWITCH_PIN_X) == LOW) {
-    stepperX.runSpeed();
-    logD("Moving X");
+  logD("Homing Y");
+  while (digitalRead(HOME_SWITCH_PIN_Y) == LOW) {
+    stepperY.runSpeed();
+    //logD("Moving Y");
   }
-  stepperX.stop();
-  stepperX.setCurrentPosition(0);
-  stepperX.moveTo(100);
-  stepperX.setCurrentPosition(0);
-  while (stepperX.distanceToGo() != 0) {
+  stepperY.stop();
+  stepperY.setCurrentPosition(0);
+  stepperY.moveTo(200);
+  stepperY.setCurrentPosition(0);
+  while (stepperY.distanceToGo() != 0) {
     stepperX.run();
   }
   delay(100);
 
-  logD("Homing Y");
-  /*
-  while (digitalRead(HOME_SWITCH_PIN_Y) == LOW) {
-    stepperY.runSpeed();
-    logD("Moving Y");
+  logD("Homing X");
+  while (digitalRead(HOME_SWITCH_PIN_X) == LOW) {
+    stepperX.runSpeed();
+    //logD("Moving X");
   }
-  */
-  stepperY.stop();
-  stepperY.setCurrentPosition(0);
-  stepperY.moveTo(100);
-  while (stepperY.distanceToGo() != 0) {
-    stepperY.run();
+  stepperX.stop();
+  stepperX.setCurrentPosition(0);
+  stepperX.moveTo(-200);
+  while (stepperX.distanceToGo() != 0) {
+    stepperX.run();
   }
-  stepperY.setCurrentPosition(0);
+  stepperX.setCurrentPosition(0);
   delay(100);
   logD("Finished Homing");
 
