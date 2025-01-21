@@ -136,6 +136,9 @@ void setup() {
   // LCD:
   lcd.begin(16, 2);
  
+  //Status LEDs:
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
 
   //Buttons:
   pinMode(BTN_DOWN, INPUT_PULLUP);
@@ -235,7 +238,7 @@ void loop() {
   if ((currentMillis - previousWateringMillis) >= waterAPlantEvery) {
   logLongUnsigned("time to water! :", currentMillis);
 
-  printBusy();
+  startBusy();
   soilWatering.toggleWatering();
   endBusy();
   
