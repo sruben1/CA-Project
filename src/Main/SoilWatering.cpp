@@ -26,6 +26,8 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
   this->HOME_SWITCH_PIN_X = HOME_SWITCH_PIN_X;
   this->HOME_SWITCH_PIN_Y = HOME_SWITCH_PIN_Y;
 
+  this->servoPin = servoPin;
+
   // Initialize with pin sequence IN1-IN3-IN2-IN4! Please do not change! (Or ask Luis)
   stepperX = AccelStepper(MotorInterfaceType, motorPin1X, motorPin3X, motorPin2X, motorPin4X);
   stepperY = AccelStepper(MotorInterfaceType, motorPin1Y, motorPin3Y, motorPin2Y, motorPin4Y);
@@ -45,6 +47,7 @@ void SoilWatering::begin(int soilNodesRngStart, const int* moistureLevels, int w
 
   servo.attach(servoPin);
   servo.write(85);
+  servo.detach();
 }
 
 /**
@@ -251,6 +254,7 @@ void SoilWatering::mapPosition(int index, long& x, long& y) {
 */
 void SoilWatering::openValve() {
   logD("Opening valve.");
+  servo.attach(servoPin);
   servo.write(0);
   delay(250);
 }
@@ -260,8 +264,9 @@ void SoilWatering::openValve() {
 */
 void SoilWatering::closeValve() {
   logD("Closing valve.");
-  servo.write(85);
+  servo.write(83);
   delay(250);
+  servo.detach();
 }
 
 // Logic to home steppers example:

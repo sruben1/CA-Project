@@ -36,6 +36,7 @@ private:
   AccelStepper stepperX;
   AccelStepper stepperY;
 
+  int servoPin;
   Servo servo;
 
   int motorPin1X;
