@@ -115,6 +115,7 @@ void SoilWatering::setInQueueState(int index, bool value){
 uint8_t* SoilWatering::collectSoilHumidityValues() {
   static uint8_t returnValues[9] = {0};
   if (currentAvrgIteration == 0) {
+    logD("In Oth average iteration, overwiriting array with first values...");
     for (int i = 0; i < 9; i++) {
       returnValues[i] = analogRead(soilNodesRngStart + i);
       currentSoilHumidityAvrg[i] = returnValues[i];
@@ -126,6 +127,7 @@ uint8_t* SoilWatering::collectSoilHumidityValues() {
       currentSoilHumidityAvrg[i] = (currentSoilHumidityAvrg[i] + returnValues[i]) / 2;
     }
     if (currentAvrgIteration == checkNeedsWateringEvery - 1) {
+      logD("In 5th average iteration, filling queue...");
       for (int i = 0; i < 9; i++) {
         if (currentSoilHumidityAvrg[i] < soilMoistureLevels[i]) {
           logIntegerDebug("Plant at position %d needs watering.", i, 0);

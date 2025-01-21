@@ -17,7 +17,7 @@ SimpleLogger logger(LOG_LEVEL_DEBUG);
 //Preferences:
 //=============
 //set standart preferences: {Sensor Interval: 30, min Soil-Humidity per pot (1 to 9): 0-11, min air temp: 40, min air humidity: 10}
-static int preferences[12] = {30,0,0,0,0,0,0,0,0,0,40,10};
+static int preferences[12] = {30,2,2,2,2,2,2,2,2,2,40,10};
 //Insert all the water values here as well
 int maxAirTemperature;
 int maxAirHumidity;
@@ -224,7 +224,7 @@ void loop() {
   /*char buffer[64];
   sprintf(buffer, "Sens bool: %lu ; delta: %lu", (currentMillis - previousSensorsMillis) > SENSOR_READ_INTERVAL, currentMillis - previousSensorsMillis);
   logger.d(buffer);*/ // Used to debug timing
-  if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL /3) {
+  if ((currentMillis - previousSensorsMillis) >= SENSOR_READ_INTERVAL) {
 
     logLongUnsigned("time to log!: ", currentMillis);
     //logLongUnsigned("Sensor read interval is: ", SENSOR_READ_INTERVAL);
