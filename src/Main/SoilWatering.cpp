@@ -250,22 +250,18 @@ void SoilWatering::mapPosition(int index, long& x, long& y) {
 *  Opening of the valve
 */
 void SoilWatering::openValve() {
-  servo.attach(servoPin);
   logD("Opening valve.");
   servo.write(0);
   delay(250);
-  serve.detach();
 }
 
 /**
 *  Closing of the valve
 */
 void SoilWatering::closeValve() {
-  servo.attach(servoPin);
   logD("Closing valve.");
   servo.write(85);
   delay(250);
-  servo.detach();
 }
 
 // Logic to home steppers example:
