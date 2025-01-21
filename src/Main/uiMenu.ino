@@ -14,7 +14,7 @@ void printLcdText(const String& line1, const String& line2) {
 /**
 *  Display on the screen that system is busy
 */
-void printBusy() {
+void startBusy() {
   //set status LEDs:
   digitalWrite(LED_GREEN, LOW);
   digitalWrite(LED_RED, HIGH);
